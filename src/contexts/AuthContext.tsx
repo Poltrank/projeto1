@@ -78,29 +78,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!user) return;
-    const docRef = doc(db, 'users', user.uid);
-    const updatedData = {
-      ...data,
-      updatedAt: serverTimestamp(),
-    };
-    await setDoc(docRef, updatedData, { merge: true });
-    
-    // Refresh profile state
-    const docSnap = await getDoc(docRef);
-    setProfile({ uid: user.uid, ...docSnap.data() } as UserProfile);
-
-    // Update ranking if opted in
-    if (updatedData.rankingOptIn || profile?.rankingOptIn) {
-      const rankingRef = doc(db, 'ranking', user.uid);
-      await setDoc(rankingRef, {
-        userId: user.uid,
-        nickname: data.nickname || profile?.nickname,
-        car: data.car || profile?.car,
-        carType: data.carType || profile?.carType,
-        weeklyTotal: data.weeklyTotal !== undefined ? data.weeklyTotal : profile?.weeklyTotal || 0,
+    if (!user) {
+      console.warn("Attempted to update profile without a logged in user");
+      return;
+    }
+    console.log("Updating profile for UID:", user.uid, "Data:", data);
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      const updatedData = {
+        ...data,
         updatedAt: serverTimestamp(),
-      }, { merge: true });
+      };
+      await setDoc(docRef, updatedData, { merge: true });
+      
+      // Refresh profile state
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const profileData = { uid: user.uid, ...docSnap.data() } as UserProfile;
+        setProfile(profileData);
+        
+        // Update ranking if opted in
+        if (updatedData.rankingOptIn || profileData.rankingOptIn) {
+          const rankingRef = doc(db, 'ranking', user.uid);
+          await setDoc(rankingRef, {
+            userId: user.uid,
+            nickname: data.nickname || profileData.nickname,
+            car: data.car || profileData.car,
+            carType: data.carType || profileData.carType,
+            weeklyTotal: data.weeklyTotal !== undefined ? data.weeklyTotal : profileData.weeklyTotal || 0,
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          console.log("Ranking updated");
+        }
+      }
+      console.log("Profile update complete");
+    } catch (error: any) {
+      console.error("Critical error updateProfile:", error);
+      throw error;
     }
   };
 
