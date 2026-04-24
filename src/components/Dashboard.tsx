@@ -9,18 +9,24 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const dailyFixedCost = (profile.monthlyInsurance || 0) / 30;
 
   const now = new Date();
+  const registrationDate = profile.createdAt ? new Date(profile.createdAt) : now;
   const startOfW = startOfWeek(now, { weekStartsOn: 1 });
   
-  // Calculate accrued fixed costs
-  const daysInWeek = differenceInDays(now, startOfW) + 1;
-  const weeklyInsuranceAccrued = daysInWeek * dailyFixedCost;
+  // Only count insurance from the LATER of (start of week) or (registration date)
+  const effectivelyStartedCountingCostsAt = registrationDate > startOfW ? registrationDate : startOfW;
   
-  const daysInMonth = now.getDate();
-  const monthlyInsuranceAccrued = daysInMonth * dailyFixedCost;
+  // Calculate accrued fixed costs
+  const daysInWeekCounted = differenceInDays(now, effectivelyStartedCountingCostsAt) + 1;
+  const weeklyInsuranceAccrued = profile.weeklyGross > 0 ? (daysInWeekCounted * dailyFixedCost) : 0;
+  
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const effectivelyStartedMonthAt = registrationDate > startOfMonth ? registrationDate : startOfMonth;
+  const daysInMonthCounted = differenceInDays(now, effectivelyStartedMonthAt) + 1;
+  const monthlyInsuranceAccrued = profile.monthlyTotal > 0 ? (daysInMonthCounted * dailyFixedCost) : 0;
 
   // Accrued insurance since registration or just for display logic
-  const netWeekly = (profile.weeklyTotal || 0) - weeklyInsuranceAccrued;
-  const netMonthly = (profile.monthlyTotal || 0) - monthlyInsuranceAccrued;
+  const netWeekly = profile.weeklyGross > 0 ? (profile.weeklyTotal || 0) - weeklyInsuranceAccrued : 0;
+  const netMonthly = profile.monthlyTotal > 0 ? (profile.monthlyTotal || 0) - monthlyInsuranceAccrued : 0;
 
   const getWeekRange = () => {
     const end = endOfWeek(now, { weekStartsOn: 1 });
