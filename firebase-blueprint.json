@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user profile and cumulative financial data.",
+      "type": "object",
+      "properties": {
+        "nickname": { "type": "string", "description": "User's public display name." },
+        "name": { "type": "string", "description": "User's full name (private)." },
+        "car": { "type": "string", "description": "Car model." },
+        "carType": { "type": "string", "enum": ["Combustão", "Elétrico"], "description": "Type of car engine." },
+        "monthlyInsurance": { "type": "number", "description": "Monthly insurance cost." },
+        "rankingOptIn": { "type": "boolean", "description": "Whether the user wants to be in the ranking." },
+        "weeklyTotal": { "type": "number", "description": "Total earnings for the current week." },
+        "monthlyTotal": { "type": "number", "description": "Total earnings for the month." },
+        "annualTotal": { "type": "number", "description": "Total earnings for the year." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nickname", "name", "car", "carType"]
+    },
+    "Transaction": {
+      "title": "Financial Transaction",
+      "description": "An individual income or expense entry.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string", "description": "Uber, 99, Combustível, etc." },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "category", "amount", "date"]
+    },
+    "RankingEntry": {
+      "title": "Ranking Entry",
+      "description": "Public entry for the global ranking.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "nickname": { "type": "string" },
+        "car": { "type": "string" },
+        "carType": { "type": "string" },
+        "weeklyTotal": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "nickname", "weeklyTotal"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Private user profiles."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User specific financial records."
+    },
+    "/ranking/{userId}": {
+      "schema": "RankingEntry",
+      "description": "Public ranking data."
+    }
+  }
+}

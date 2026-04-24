@@ -1,0 +1,131 @@
+import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { Modal } from "./Modal";
+import { db } from "../lib/firebase";
+import { collection, addDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
+import { startOfWeek, endOfWeek, isWithinInterval, parseISO } from "date-fns";
+
+const EXPENSE_CATEGORIES = ["Alimentação", "Combustível", "Manutenção", "Outros"];
+const INCOME_CATEGORIES = ["99", "Uber", "Muvi", "Zopp", "Indriver", "Particular"];
+
+export function EntryActions() {
+  const { user, profile, updateProfile } = useAuth();
+  const [modalType, setModalType] = useState<'income' | 'expense' | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user || !profile) return;
+    
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const amount = Number(formData.get('amount'));
+    const category = formData.get('category') as string;
+    const type = modalType!;
+
+    try {
+      // 1. Save Transaction
+      const transRef = collection(db, 'users', user.uid, 'transactions');
+      await addDoc(transRef, {
+        userId: user.uid,
+        type,
+        category,
+        amount,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+      });
+
+      // 2. Simple update logic (for MVP, normally we'd sum all transactions)
+      // We'll increment totals in the profile for real-time dashboard updates
+      const diff = type === 'income' ? amount : -amount;
+      await updateProfile({
+        weeklyTotal: (profile.weeklyTotal || 0) + diff,
+        monthlyTotal: (profile.monthlyTotal || 0) + diff,
+        annualTotal: (profile.annualTotal || 0) + diff,
+      });
+
+      setModalType(null);
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao salvar lançamento.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex gap-3 px-6 mb-6">
+        <button 
+          onClick={() => setModalType('income')}
+          className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-5 rounded-2xl shadow-lg flex flex-col items-center justify-center gap-1 transition-all active:scale-95"
+        >
+          <span className="text-xl">+ Lucro</span>
+          <span className="text-[10px] uppercase opacity-80 tracking-widest">Uber, 99, Outros</span>
+        </button>
+        <button 
+          onClick={() => setModalType('expense')}
+          className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-5 rounded-2xl shadow-lg flex flex-col items-center justify-center gap-1 transition-all active:scale-95"
+        >
+          <span className="text-xl">- Gasto</span>
+          <span className="text-[10px] uppercase opacity-80 tracking-widest">Combustível, Manut.</span>
+        </button>
+      </div>
+
+      <Modal 
+        isOpen={!!modalType} 
+        onClose={() => setModalType(null)} 
+        title={modalType === 'income' ? "Novo Lucro" : "Novo Gasto"}
+        variant={modalType || 'default'}
+      >
+        <form onSubmit={handleSave} className="space-y-6">
+          <div>
+            <label className="block text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">Valor do Lançamento</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-500">R$</span>
+              <input 
+                name="amount"
+                type="number" 
+                step="0.01" 
+                required
+                autoFocus
+                className="w-full bg-slate-800 border border-slate-700 pl-14 p-5 rounded-2xl text-4xl font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                placeholder="0,00"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">Origem do Faturamento</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(modalType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map(cat => (
+                <label key={cat} className="relative cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="category" 
+                    value={cat} 
+                    required 
+                    className="peer sr-only" 
+                  />
+                  <div className="p-4 text-center bg-slate-800 border border-slate-700 rounded-xl peer-checked:bg-white peer-checked:text-slate-900 peer-checked:border-white transition-all text-sm font-bold uppercase tracking-tight">
+                    {cat}
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className={`w-full py-5 rounded-2xl font-black text-xl uppercase tracking-widest shadow-xl transition-all active:scale-95 ${
+              modalType === 'income' ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-rose-500 text-white shadow-rose-500/20'
+            }`}
+          >
+            {loading ? "Processando..." : "Confirmar Agora"}
+          </button>
+        </form>
+      </Modal>
+    </>
+  );
+}
