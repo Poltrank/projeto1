@@ -106,6 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             car: data.car || profileData.car,
             carType: data.carType || profileData.carType,
             weeklyTotal: data.weeklyTotal !== undefined ? data.weeklyTotal : profileData.weeklyTotal || 0,
+            monthlyTotal: data.monthlyTotal !== undefined ? data.monthlyTotal : profileData.monthlyTotal || 0,
+            weeklyGross: data.weeklyGross !== undefined ? data.weeklyGross : profileData.weeklyGross || 0,
+            monthlyGross: data.monthlyGross !== undefined ? data.monthlyGross : profileData.monthlyGross || 0,
+            monthlyInsurance: data.monthlyInsurance !== undefined ? data.monthlyInsurance : profileData.monthlyInsurance || 0,
             updatedAt: serverTimestamp(),
           }, { merge: true });
           console.log("Ranking updated");

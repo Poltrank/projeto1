@@ -11,6 +11,8 @@ export interface UserProfile {
   weeklyTotal: number;
   monthlyTotal: number;
   annualTotal: number;
+  weeklyGross: number;
+  monthlyGross: number;
   createdAt: any;
   updatedAt: any;
 }
@@ -33,5 +35,9 @@ export interface RankingEntry {
   car: string;
   carType: CarType;
   weeklyTotal: number;
+  monthlyTotal: number;
+  weeklyGross: number;
+  monthlyGross: number;
+  monthlyInsurance: number;
   updatedAt: any;
 }

@@ -38,10 +38,13 @@ export function EntryActions() {
       // 2. Simple update logic (for MVP, normally we'd sum all transactions)
       // We'll increment totals in the profile for real-time dashboard updates
       const diff = type === 'income' ? amount : -amount;
+      const incomeDiff = type === 'income' ? amount : 0;
       await updateProfile({
         weeklyTotal: (profile.weeklyTotal || 0) + diff,
         monthlyTotal: (profile.monthlyTotal || 0) + diff,
         annualTotal: (profile.annualTotal || 0) + diff,
+        weeklyGross: (profile.weeklyGross || 0) + incomeDiff,
+        monthlyGross: (profile.monthlyGross || 0) + incomeDiff,
       });
 
       setModalType(null);
@@ -99,7 +102,7 @@ export function EntryActions() {
             <label className="block text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">Origem do Faturamento</label>
             <div className="grid grid-cols-2 gap-2">
               {(modalType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map(cat => (
-                <label key={cat} className="relative cursor-pointer">
+                <label key={cat} className="relative cursor-pointer group">
                   <input 
                     type="radio" 
                     name="category" 
@@ -107,7 +110,15 @@ export function EntryActions() {
                     required 
                     className="peer sr-only" 
                   />
-                  <div className="p-4 text-center bg-slate-800 border border-slate-700 rounded-xl peer-checked:bg-white peer-checked:text-slate-900 peer-checked:border-white transition-all text-sm font-bold uppercase tracking-tight">
+                  <div className={`
+                    p-4 text-center rounded-xl border transition-all text-sm font-black uppercase tracking-wider
+                    bg-slate-800/50 border-slate-700 text-slate-400
+                    hover:border-slate-500 hover:text-slate-300
+                    ${modalType === 'income' 
+                      ? 'peer-checked:bg-emerald-500 peer-checked:border-emerald-500 peer-checked:text-white' 
+                      : 'peer-checked:bg-rose-500 peer-checked:border-rose-500 peer-checked:text-white'
+                    }
+                  `}>
                     {cat}
                   </div>
                 </label>

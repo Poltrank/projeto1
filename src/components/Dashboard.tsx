@@ -2,9 +2,30 @@ import { formatCurrency } from "../lib/utils";
 import { UserProfile } from "../types";
 import { motion } from "motion/react";
 import { Calendar } from "lucide-react";
+import { format, startOfWeek, endOfWeek, differenceInDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export function Dashboard({ profile }: { profile: UserProfile }) {
   const dailyFixedCost = (profile.monthlyInsurance || 0) / 30;
+
+  const now = new Date();
+  const startOfW = startOfWeek(now, { weekStartsOn: 1 });
+  
+  // Calculate accrued fixed costs
+  const daysInWeek = differenceInDays(now, startOfW) + 1;
+  const weeklyInsuranceAccrued = daysInWeek * dailyFixedCost;
+  
+  const daysInMonth = now.getDate();
+  const monthlyInsuranceAccrued = daysInMonth * dailyFixedCost;
+
+  // Accrued insurance since registration or just for display logic
+  const netWeekly = (profile.weeklyTotal || 0) - weeklyInsuranceAccrued;
+  const netMonthly = (profile.monthlyTotal || 0) - monthlyInsuranceAccrued;
+
+  const getWeekRange = () => {
+    const end = endOfWeek(now, { weekStartsOn: 1 });
+    return `${format(startOfW, "dd")} a ${format(end, "dd")} de ${format(now, "MMMM", { locale: ptBR })}`;
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -14,20 +35,28 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-slate-50 border border-slate-200 p-6 rounded-3xl"
         >
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Faturamento Semanal</p>
-          <h2 className="text-4xl font-black text-emerald-600 leading-none mt-2">
-            {formatCurrency(profile.weeklyTotal || 0)}
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Lucro Líquido Semanal</p>
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+              {getWeekRange()}
+            </span>
+          </div>
+          <h2 className="text-4xl font-black text-emerald-600 leading-none">
+            {formatCurrency(netWeekly)}
           </h2>
+          <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-tight">
+            Desconto de {formatCurrency(weeklyInsuranceAccrued)} em custos fixos
+          </p>
         </motion.div>
         
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
-            <p className="text-slate-500 text-[10px] font-bold uppercase">Mensal</p>
-            <p className="text-xl font-bold text-slate-800">{formatCurrency(profile.monthlyTotal || 0)}</p>
+            <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">Mensal (Líquido)</p>
+            <p className="text-xl font-black text-slate-800 tabular-nums">{formatCurrency(netMonthly)}</p>
           </div>
           <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
-            <p className="text-slate-500 text-[10px] font-bold uppercase">Anual</p>
-            <p className="text-xl font-bold text-slate-800">{formatCurrency(profile.annualTotal || 0)}</p>
+            <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">Anual Total</p>
+            <p className="text-xl font-black text-slate-800 tabular-nums">{formatCurrency(profile.annualTotal || 0)}</p>
           </div>
         </div>
       </div>
