@@ -79,27 +79,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetProfile = async () => {
     if (!user) return;
     try {
-      const { deleteDoc, doc, collection, getDocs, query, where, writeBatch } = await import('firebase/firestore');
+      const { doc, collection, getDocs, writeBatch } = await import('firebase/firestore');
       
       const batch = writeBatch(db);
       
-      // Clear ranking
+      // 1. Clear ranking
       batch.delete(doc(db, 'ranking', user.uid));
       
-      // Clear transactions
-      const q = query(collection(db, 'transactions'), where('userId', '==', user.uid));
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
+      // 2. Clear transactions subcollection (this is where real data is)
+      const transactionsPath = `users/${user.uid}/transactions`;
+      const transactionsSnap = await getDocs(collection(db, transactionsPath));
+      transactionsSnap.forEach((tDoc) => {
+        batch.delete(tDoc.ref);
       });
       
-      // Clear user data last
+      // 3. Clear user profile doc
       batch.delete(doc(db, 'users', user.uid));
       
       await batch.commit();
 
       setProfile(null);
-      await logout();
+      await signOut(auth);
       window.location.reload();
     } catch (error) {
       console.error("Error resetting profile:", error);
@@ -109,9 +109,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const deleteUser = async (userId: string) => {
     if (!isAdmin) throw new Error("Acesso negado");
-    const { deleteDoc, doc } = await import('firebase/firestore');
-    await deleteDoc(doc(db, 'users', userId));
-    await deleteDoc(doc(db, 'ranking', userId));
+    try {
+      const { doc, collection, getDocs, writeBatch } = await import('firebase/firestore');
+      const batch = writeBatch(db);
+      
+      // 1. Clear ranking
+      batch.delete(doc(db, 'ranking', userId));
+      
+      // 2. Clear transactions subcollection
+      const transactionsSnap = await getDocs(collection(db, `users/${userId}/transactions`));
+      transactionsSnap.forEach((tDoc) => {
+        batch.delete(tDoc.ref);
+      });
+      
+      // 3. Clear user profile doc
+      batch.delete(doc(db, 'users', userId));
+      
+      await batch.commit();
+    } catch (error) {
+      console.error("Error deleting user data:", error);
+      throw error;
+    }
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {

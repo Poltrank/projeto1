@@ -6,18 +6,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { logout, resetProfile, user, profile, isAdmin } = useAuth();
 
   const handleReset = async () => {
-    const confirmed = window.confirm("Você tem certeza que deseja RESETAR todos os dados? Isso apagará seu perfil, ranking e histórico de faturamento para sempre.");
+    const confirmed = window.confirm("CUIDADO: Isso apagará TODOS os seus lançamentos, seu perfil e seu ranking. Você precisará se cadastrar novamente. Confirma?");
     if (confirmed) {
       try {
         await resetProfile();
+        alert("Sistema Resetado com Sucesso! Faça o cadastro novamente.");
       } catch (err) {
         console.error("Reset error:", err);
-        alert("Erro ao resetar dados. Verifique sua conexão.");
+        alert("Erro ao resetar. Tente sair e entrar novamente.");
       }
     }
   };
 
-  const isOwner = user?.email === 'cassiomatsuoka@gmail.com' || user?.email === 'adm@motoristafinancas.com' || user?.email === '47974008115@motoristapro.com' || user?.email === 'adm@motoristapro.com';
+  const isOwner = user?.email === 'cassiomatsuoka@gmail.com' || 
+                  user?.email === 'adm@motoristafinancas.com' || 
+                  user?.email === '47974008115@motoristapro.com' || 
+                  user?.email === 'adm@motoristapro.com';
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans antialiased">
