@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Helper to format phone to internal email
   const phoneToEmail = (phone: string) => {
-    const clean = phone.trim();
+    const clean = phone.trim().replace(/\s/g, '');
     if (clean.toUpperCase() === 'ADM') return 'adm@motoristafinancas.com';
     // Check if it's already an email
     if (clean.includes('@')) return clean;

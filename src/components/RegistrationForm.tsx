@@ -28,21 +28,26 @@ export function RegistrationForm() {
       carType: "Combustão",
       monthlyInsurance: 0,
       rankingOptIn: true,
+      nickname: "", // Ensure explicit defaults
+      name: "",
+      car: "",
     },
   });
 
   const onSubmit = async (data: ProfileValues) => {
+    console.log("Iniciando salvamento de perfil:", data);
     try {
       await updateProfile({
         ...data,
         weeklyTotal: 0,
         monthlyTotal: 0,
         annualTotal: 0,
-        createdAt: new Date().toISOString(), // Fallback if serverTimestamp is handled differently
+        createdAt: new Date().toISOString(),
       });
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao salvar perfil.");
+      console.log("Perfil salvo com sucesso!");
+    } catch (error: any) {
+      console.error("Erro ao salvar perfil:", error);
+      alert("Erro ao salvar perfil: " + (error.message || "Verifique sua conexão"));
     }
   };
 
@@ -55,7 +60,12 @@ export function RegistrationForm() {
       <h2 className="text-3xl font-bold mb-2 text-slate-900 tracking-tight">Finalizar Cadastro</h2>
       <p className="text-slate-500 mb-8 text-lg font-medium leading-tight">Olá, {user?.displayName}! Personalize suas informações de motorista.</p>
       
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit, (err) => console.log("Erros de validação:", err))} className="space-y-6">
+        {Object.keys(errors).length > 0 && (
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm font-bold">
+            Existem campos obrigatórios não preenchidos corretamente acima.
+          </div>
+        )}
         <div>
           <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Nickname Público</label>
           <input

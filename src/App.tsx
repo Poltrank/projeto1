@@ -24,7 +24,7 @@ function AppContent() {
   const handlePhoneAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    const cleanPhone = phone.trim();
+    const cleanPhone = phone.trim().replace(/\s/g, '');
     const isAdmLogin = cleanPhone.toUpperCase() === 'ADM';
     if (!isAdmLogin && !cleanPhone.includes('@') && cleanPhone.replace(/\D/g, '').length < 10) {
       setAuthError("Número de celular inválido. Use o formato com DDD ou um email válido.");
@@ -44,13 +44,15 @@ function AppContent() {
         await signUpPhone(cleanPhone, password);
       }
     } catch (error: any) {
-      console.error(error);
-      if (error.code === 'auth/user-not-found') setAuthError("Usuário não encontrado. Verifique o número ou crie uma conta.");
+      console.error("Auth Error Code:", error.code);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        setAuthError("Usuário ou senha incorretos. Verifique os dados e tente novamente.");
+      }
       else if (error.code === 'auth/wrong-password') setAuthError("Senha incorreta. Tente novamente.");
       else if (error.code === 'auth/email-already-in-use') setAuthError("Este acesso já está cadastrado.");
       else if (error.code === 'auth/operation-not-allowed') setAuthError("O login por senha ainda não foi habilitado no Firebase.");
       else if (error.code === 'auth/invalid-email') setAuthError("O formato do identificador é inválido.");
-      else setAuthError("Erro na autenticação: " + error.message);
+      else setAuthError("Erro na autenticação: " + (error.message || "Dados inválidos"));
     } finally {
       setAuthLoading(false);
     }
