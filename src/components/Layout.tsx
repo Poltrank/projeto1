@@ -32,7 +32,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {isOwner && profile && (
+            {isOwner && (
               <button 
                 onClick={handleReset}
                 className="px-2 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all mr-2"

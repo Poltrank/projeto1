@@ -148,20 +148,21 @@ function AppContent() {
     );
   }
 
-  if (!profile && !isAdmin) {
+  if (!profile || !profile.nickname) {
     return (
       <Layout>
         <div className="p-4">
           <RegistrationForm />
         </div>
+        <Ranking />
       </Layout>
     );
   }
 
   return (
     <Layout>
-      {profile && <Dashboard profile={profile} />}
-      {!isAdmin && <EntryActions />}
+      <Dashboard profile={profile} />
+      <EntryActions />
       <Ranking />
     </Layout>
   );
