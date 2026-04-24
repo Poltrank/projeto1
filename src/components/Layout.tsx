@@ -17,7 +17,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const isOwner = user?.email === 'cassiomatsuoka@gmail.com' || user?.email === 'adm@motoristafinancas.com' || user?.email === '47974008115@motoristapro.com';
+  const isOwner = user?.email === 'cassiomatsuoka@gmail.com' || user?.email === 'adm@motoristafinancas.com' || user?.email === '47974008115@motoristapro.com' || user?.email === 'adm@motoristapro.com';
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans antialiased">

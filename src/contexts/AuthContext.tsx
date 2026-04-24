@@ -41,7 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsAdmin(
           user.email === 'adm@motoristafinancas.com' || 
           user.email === 'cassiomatsuoka@gmail.com' || 
-          user.email === '47974008115@motoristapro.com'
+          user.email === '47974008115@motoristapro.com' ||
+          user.email === 'adm@motoristapro.com'
         );
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
