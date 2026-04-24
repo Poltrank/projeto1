@@ -17,16 +17,18 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   
   // Calculate accrued fixed costs
   const daysInWeekCounted = differenceInDays(now, effectivelyStartedCountingCostsAt) + 1;
-  const weeklyInsuranceAccrued = profile.weeklyGross > 0 ? (daysInWeekCounted * dailyFixedCost) : 0;
+  const hasActivity = (profile.weeklyTotal || 0) !== 0 || (profile.weeklyGross || 0) > 0;
+  const weeklyInsuranceAccrued = hasActivity ? (daysInWeekCounted * dailyFixedCost) : 0;
   
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const effectivelyStartedMonthAt = registrationDate > startOfMonth ? registrationDate : startOfMonth;
   const daysInMonthCounted = differenceInDays(now, effectivelyStartedMonthAt) + 1;
-  const monthlyInsuranceAccrued = profile.monthlyTotal > 0 ? (daysInMonthCounted * dailyFixedCost) : 0;
+  const hasMonthlyActivity = (profile.monthlyTotal || 0) !== 0 || (profile.monthlyGross || 0) > 0;
+  const monthlyInsuranceAccrued = hasMonthlyActivity ? (daysInMonthCounted * dailyFixedCost) : 0;
 
   // Accrued insurance since registration or just for display logic
-  const netWeekly = profile.weeklyGross > 0 ? (profile.weeklyTotal || 0) - weeklyInsuranceAccrued : 0;
-  const netMonthly = profile.monthlyTotal > 0 ? (profile.monthlyTotal || 0) - monthlyInsuranceAccrued : 0;
+  const netWeekly = hasActivity ? (profile.weeklyTotal || 0) - weeklyInsuranceAccrued : 0;
+  const netMonthly = hasMonthlyActivity ? (profile.monthlyTotal || 0) - monthlyInsuranceAccrued : 0;
 
   const getWeekRange = () => {
     const end = endOfWeek(now, { weekStartsOn: 1 });
@@ -51,7 +53,7 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
             {formatCurrency(netWeekly)}
           </h2>
           <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-tight">
-            {profile.weeklyGross === 0 ? "Pronto para iniciar?" : `Desconto de ${formatCurrency(weeklyInsuranceAccrued)} em custos fixos`}
+            {!hasActivity ? "Pronto para iniciar?" : `Desconto de ${formatCurrency(weeklyInsuranceAccrued)} em custos fixos`}
           </p>
         </motion.div>
         
