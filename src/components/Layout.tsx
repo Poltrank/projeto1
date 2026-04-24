@@ -75,7 +75,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <footer className="fixed bottom-0 left-0 right-0 p-3 bg-slate-900 text-white text-center border-t border-white/10 z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
         <p className="text-[10px] opacity-70 leading-tight">
           Site Gratuito desenvolvido por Motorista de Jaraguá do Sul<br/>
-          <span className="font-bold">Suporte: (47) 97400-8115</span>
+          <a 
+            href="https://wa.me/5547974008115" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="font-bold hover:text-emerald-500 transition-colors"
+          >
+            Suporte: (47) 97400-8115
+          </a>
         </p>
       </footer>
     </div>
