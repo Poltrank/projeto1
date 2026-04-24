@@ -7,7 +7,6 @@ import { motion } from "motion/react";
 
 const profileSchema = z.object({
   nickname: z.string().min(3, "Mínimo 3 caracteres").max(20, "Máximo 20 caracteres"),
-  name: z.string().min(3, "Nome muito curto"),
   car: z.string().min(2, "Informe seu carro"),
   carType: z.enum(["Combustão", "Elétrico"]),
   monthlyInsurance: z.number().min(0),
@@ -29,7 +28,6 @@ export function RegistrationForm() {
       monthlyInsurance: 0,
       rankingOptIn: true,
       nickname: "", // Ensure explicit defaults
-      name: "",
       car: "",
     },
   });
@@ -42,6 +40,8 @@ export function RegistrationForm() {
         weeklyTotal: 0,
         monthlyTotal: 0,
         annualTotal: 0,
+        weeklyGross: 0,
+        monthlyGross: 0,
         createdAt: new Date().toISOString(),
       });
       console.log("Perfil salvo com sucesso!");
@@ -74,15 +74,6 @@ export function RegistrationForm() {
             placeholder="Ex: PedroUber"
           />
           {errors.nickname && <p className="text-rose-500 text-sm mt-1 font-bold">{errors.nickname.message}</p>}
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Nome Completo</label>
-          <input
-            {...register("name")}
-            className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-          />
-          {errors.name && <p className="text-rose-500 text-sm mt-1 font-bold">{errors.name.message}</p>}
         </div>
 
         <div className="grid grid-cols-1 gap-6">

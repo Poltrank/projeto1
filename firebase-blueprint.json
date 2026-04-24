@@ -17,7 +17,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["nickname", "name", "car", "carType"]
+      "required": ["nickname", "car", "carType"]
     },
     "Transaction": {
       "title": "Financial Transaction",

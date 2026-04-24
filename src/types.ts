@@ -3,7 +3,7 @@ export type CarType = 'Combustão' | 'Elétrico';
 export interface UserProfile {
   uid: string;
   nickname: string;
-  name: string;
+  name?: string;
   car: string;
   carType: CarType;
   monthlyInsurance: number;

@@ -79,25 +79,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetProfile = async () => {
     if (!user) return;
     try {
-      const { doc, collection, getDocs, writeBatch } = await import('firebase/firestore');
+      const { doc, collection, getDocs, writeBatch, query, where } = await import('firebase/firestore');
       
       const batch = writeBatch(db);
+      const uid = user.uid;
       
-      // 1. Clear ranking
-      batch.delete(doc(db, 'ranking', user.uid));
+      console.log("Starting full reset for UID:", uid);
+
+      // 1. Clear ranking doc
+      batch.delete(doc(db, 'ranking', uid));
       
-      // 2. Clear transactions subcollection (this is where real data is)
-      const transactionsPath = `users/${user.uid}/transactions`;
-      const transactionsSnap = await getDocs(collection(db, transactionsPath));
-      transactionsSnap.forEach((tDoc) => {
+      // 2. Clear subcollection transactions (standard)
+      const subTransSnap = await getDocs(collection(db, `users/${uid}/transactions`));
+      console.log(`Found ${subTransSnap.size} sub-transactions to delete`);
+      subTransSnap.forEach((tDoc) => {
+        batch.delete(tDoc.ref);
+      });
+
+      // 3. Clear potential top-level transactions (legacy or accidental)
+      const topTransQ = query(collection(db, 'transactions'), where('userId', '==', uid));
+      const topTransSnap = await getDocs(topTransQ);
+      console.log(`Found ${topTransSnap.size} top-level transactions to delete`);
+      topTransSnap.forEach((tDoc) => {
         batch.delete(tDoc.ref);
       });
       
-      // 3. Clear user profile doc
-      batch.delete(doc(db, 'users', user.uid));
+      // 4. Clear user profile doc
+      batch.delete(doc(db, 'users', uid));
       
+      console.log("Committing reset batch...");
       await batch.commit();
 
+      console.log("Reset complete. Signing out and reloading.");
       setProfile(null);
       await signOut(auth);
       window.location.reload();

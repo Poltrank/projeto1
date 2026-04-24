@@ -45,7 +45,7 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
             {formatCurrency(netWeekly)}
           </h2>
           <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-tight">
-            Desconto de {formatCurrency(weeklyInsuranceAccrued)} em custos fixos
+            {profile.weeklyGross === 0 ? "Pronto para iniciar?" : `Desconto de ${formatCurrency(weeklyInsuranceAccrued)} em custos fixos`}
           </p>
         </motion.div>
         
