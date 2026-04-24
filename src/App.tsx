@@ -96,12 +96,12 @@ function AppContent() {
           
           <div className="space-y-4 text-left">
             <div>
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1">WhatsApp / Celular / ADM</label>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1">WhatsApp / Celular</label>
               <input
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="(47) 99999-9999 ou ADM"
+                placeholder="(47) 99999-9999"
                 className="w-full bg-slate-800 border border-slate-700 p-4 rounded-xl text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-bold"
                 required
               />
