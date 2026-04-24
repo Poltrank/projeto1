@@ -13,6 +13,7 @@ interface AuthContextType {
   signInPhone: (phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  resetProfile: () => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
 }
 
@@ -70,6 +71,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => signOut(auth);
 
+  const resetProfile = async () => {
+    if (!user) return;
+    const { deleteDoc, doc } = await import('firebase/firestore');
+    // Clear user data and ranking
+    await deleteDoc(doc(db, 'users', user.uid));
+    await deleteDoc(doc(db, 'ranking', user.uid));
+    
+    // Clear transactions as well
+    const { collection, getDocs, query, where, writeBatch } = await import('firebase/firestore');
+    const q = query(collection(db, 'transactions'), where('userId', '==', user.uid));
+    const querySnapshot = await getDocs(q);
+    const batch = writeBatch(db);
+    querySnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    setProfile(null);
+    window.location.reload(); // Hard refresh to clear any local state
+  };
+
   const deleteUser = async (userId: string) => {
     if (!isAdmin) throw new Error("Acesso negado");
     const { deleteDoc, doc } = await import('firebase/firestore');
@@ -123,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signUpPhone, signInPhone, logout, updateProfile, deleteUser }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signUpPhone, signInPhone, logout, updateProfile, resetProfile, deleteUser }}>
       {children}
     </AuthContext.Provider>
   );

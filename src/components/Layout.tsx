@@ -3,7 +3,17 @@ import { useAuth } from "../contexts/AuthContext";
 import { LogOut, User as UserIcon } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { logout, user, profile } = useAuth();
+  const { logout, resetProfile, user, profile } = useAuth();
+
+  const handleReset = async () => {
+    if (window.confirm("Você tem certeza que deseja RESETAR todos os dados? Isso apagará seu perfil, ranking e histórico de faturamento para sempre.")) {
+      try {
+        await resetProfile();
+      } catch (err) {
+        alert("Erro ao resetar dados. Tente novamente.");
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans antialiased">
@@ -17,7 +27,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
               Jaraguá do Sul • SC
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {user && profile && (
+              <button 
+                onClick={handleReset}
+                className="px-2 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all mr-2"
+              >
+                Reset
+              </button>
+            )}
             {user && profile && (
               <div className="text-right mr-2 hidden sm:block">
                 <p className="text-xs font-bold leading-none">{profile.nickname}</p>
