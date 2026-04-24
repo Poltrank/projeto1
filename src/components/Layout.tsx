@@ -10,26 +10,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="bg-slate-900 text-white pt-10 pb-6 px-6 sticky top-0 z-30 shadow-lg">
         <div className="flex items-center justify-between max-w-lg mx-auto w-full">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {profile ? `Olá, ${profile.nickname}` : "Motorista Pro"}
+            <h1 className="text-2xl font-black tracking-tight text-emerald-500 italic uppercase">
+              Motorista Finanças
             </h1>
-            <p className="text-slate-400 text-sm">
-              {profile ? `${profile.car} • ${profile.carType}` : "Bem-vindo"}
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+              Jaraguá do Sul • SC
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {user && profile && (
+              <div className="text-right mr-2 hidden sm:block">
+                <p className="text-xs font-bold leading-none">{profile.nickname}</p>
+                <p className="text-[10px] text-slate-500 italic uppercase">{profile.car}</p>
+              </div>
+            )}
             {user && (
-              <div className="h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center font-bold text-slate-900 border-2 border-white uppercase">
+              <div className="h-10 w-10 bg-emerald-500 rounded-full flex items-center justify-center font-bold text-slate-900 border border-white/20 uppercase text-xs">
                 {profile?.nickname.substring(0, 2) || "?"}
               </div>
             )}
             {user && (
               <button 
                 onClick={() => logout()}
-                className="p-2 text-slate-400 hover:text-rose-400 transition-colors"
+                className="p-2 text-slate-500 hover:text-rose-400 transition-colors"
                 title="Sair"
               >
-                <LogOut size={20} />
+                <LogOut size={18} />
               </button>
             )}
           </div>

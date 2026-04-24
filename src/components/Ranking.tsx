@@ -3,10 +3,12 @@ import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestor
 import { db } from "../lib/firebase";
 import { RankingEntry } from "../types";
 import { formatCurrency } from "../lib/utils";
-import { Trophy, Car, Zap, Flame } from "lucide-react";
+import { Trophy, Car, Zap, Flame, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Ranking() {
+  const { user, isAdmin, deleteUser } = useAuth();
   const [entries, setEntries] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +46,7 @@ export function Ranking() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             className={`flex items-center justify-between p-4 bg-slate-50 rounded-2xl border ${
-              entry.userId === db.app.options.projectId ? 'ring-2 ring-emerald-200 border-emerald-200' : 'border-slate-100'
+              entry.userId === user?.uid ? 'ring-2 ring-emerald-200 border-emerald-200' : 'border-slate-100'
             }`}
           >
             <div className="flex items-center gap-4">
@@ -66,9 +68,27 @@ export function Ranking() {
                 </p>
               </div>
             </div>
-            <span className="font-bold text-emerald-600 text-lg">
-              {formatCurrency(entry.weeklyTotal)}
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="font-bold text-emerald-600 text-lg">
+                {formatCurrency(entry.weeklyTotal)}
+              </span>
+              {isAdmin && (
+                <button
+                  onClick={async () => {
+                    if (confirm(`Excluir ${entry.nickname}?`)) {
+                      try {
+                        await deleteUser(entry.userId);
+                      } catch (e: any) {
+                        alert(e.message);
+                      }
+                    }
+                  }}
+                  className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
           </motion.div>
         ))}
 

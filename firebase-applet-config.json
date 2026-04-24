@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0292220463",
-  "appId": "1:661042807855:web:86c8c15556e5127b7eb2da",
-  "apiKey": "AIzaSyCaJcQy2lbbdcM4gPDShZB5qJnaqHT0Xv0",
-  "authDomain": "gen-lang-client-0292220463.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-00b9814b-c499-4523-a850-337f94a8fdb1",
-  "storageBucket": "gen-lang-client-0292220463.firebasestorage.app",
-  "messagingSenderId": "661042807855",
-  "measurementId": ""
+  "apiKey": "AIzaSyAuzE16iV6-GBah1cm9N01mY1qc3F_dPVo",
+  "authDomain": "motorista-particular-f8f71.firebaseapp.com",
+  "projectId": "motorista-particular-f8f71",
+  "storageBucket": "motorista-particular-f8f71.firebasestorage.app",
+  "messagingSenderId": "793019797346",
+  "appId": "1:793019797346:web:0f8c4832d88386658d263b",
+  "measurementId": "G-F23X12NEBY",
+  "firestoreDatabaseId": "(default)"
 }

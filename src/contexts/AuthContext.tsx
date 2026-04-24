@@ -8,9 +8,12 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  signIn: () => Promise<void>;
+  isAdmin: boolean;
+  signUpPhone: (phone: string, password: string) => Promise<void>;
+  signInPhone: (phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,12 +21,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Helper to format phone to internal email
+  const phoneToEmail = (phone: string) => {
+    if (phone.toUpperCase() === 'ADM') return 'adm@motoristafinancas.com';
+    return `${phone.replace(/\D/g, '')}@motoristapro.com`;
+  };
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
+        setIsAdmin(user.email === 'adm@motoristafinancas.com');
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -33,17 +44,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setProfile(null);
+        setIsAdmin(false);
       }
       setLoading(false);
     });
   }, []);
 
-  const signIn = async () => {
+  const signInGoogle = async () => {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   };
 
+  const signUpPhone = async (phone: string, password: string) => {
+    const { createUserWithEmailAndPassword } = await import('firebase/auth');
+    await createUserWithEmailAndPassword(auth, phoneToEmail(phone), password);
+  };
+
+  const signInPhone = async (phone: string, password: string) => {
+    const { signInWithEmailAndPassword } = await import('firebase/auth');
+    await signInWithEmailAndPassword(auth, phoneToEmail(phone), password);
+  };
+
   const logout = () => signOut(auth);
+
+  const deleteUser = async (userId: string) => {
+    if (!isAdmin) throw new Error("Acesso negado");
+    const { deleteDoc, doc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'users', userId));
+    await deleteDoc(doc(db, 'ranking', userId));
+  };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!user) return;
@@ -73,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signUpPhone, signInPhone, logout, updateProfile, deleteUser }}>
       {children}
     </AuthContext.Provider>
   );
