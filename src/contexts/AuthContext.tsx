@@ -38,7 +38,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        setIsAdmin(user.email === 'adm@motoristafinancas.com');
+        setIsAdmin(
+          user.email === 'adm@motoristafinancas.com' || 
+          user.email === 'cassiomatsuoka@gmail.com' || 
+          user.email === '47974008115@motoristapro.com'
+        );
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -73,23 +77,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetProfile = async () => {
     if (!user) return;
-    const { deleteDoc, doc } = await import('firebase/firestore');
-    // Clear user data and ranking
-    await deleteDoc(doc(db, 'users', user.uid));
-    await deleteDoc(doc(db, 'ranking', user.uid));
-    
-    // Clear transactions as well
-    const { collection, getDocs, query, where, writeBatch } = await import('firebase/firestore');
-    const q = query(collection(db, 'transactions'), where('userId', '==', user.uid));
-    const querySnapshot = await getDocs(q);
-    const batch = writeBatch(db);
-    querySnapshot.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
+    try {
+      const { deleteDoc, doc, collection, getDocs, query, where, writeBatch } = await import('firebase/firestore');
+      
+      const batch = writeBatch(db);
+      
+      // Clear ranking
+      batch.delete(doc(db, 'ranking', user.uid));
+      
+      // Clear transactions
+      const q = query(collection(db, 'transactions'), where('userId', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      
+      // Clear user data last
+      batch.delete(doc(db, 'users', user.uid));
+      
+      await batch.commit();
 
-    setProfile(null);
-    window.location.reload(); // Hard refresh to clear any local state
+      setProfile(null);
+      await logout();
+      window.location.reload();
+    } catch (error) {
+      console.error("Error resetting profile:", error);
+      throw error;
+    }
   };
 
   const deleteUser = async (userId: string) => {

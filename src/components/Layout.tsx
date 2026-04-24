@@ -3,17 +3,21 @@ import { useAuth } from "../contexts/AuthContext";
 import { LogOut, User as UserIcon } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { logout, resetProfile, user, profile } = useAuth();
+  const { logout, resetProfile, user, profile, isAdmin } = useAuth();
 
   const handleReset = async () => {
-    if (window.confirm("Você tem certeza que deseja RESETAR todos os dados? Isso apagará seu perfil, ranking e histórico de faturamento para sempre.")) {
+    const confirmed = window.confirm("Você tem certeza que deseja RESETAR todos os dados? Isso apagará seu perfil, ranking e histórico de faturamento para sempre.");
+    if (confirmed) {
       try {
         await resetProfile();
       } catch (err) {
-        alert("Erro ao resetar dados. Tente novamente.");
+        console.error("Reset error:", err);
+        alert("Erro ao resetar dados. Verifique sua conexão.");
       }
     }
   };
+
+  const isOwner = user?.email === 'cassiomatsuoka@gmail.com' || user?.email === 'adm@motoristafinancas.com' || user?.email === '47974008115@motoristapro.com';
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans antialiased">
@@ -28,12 +32,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {user && profile && (
+            {isOwner && profile && (
               <button 
                 onClick={handleReset}
                 className="px-2 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all mr-2"
               >
-                Reset
+                Reset System
               </button>
             )}
             {user && profile && (
