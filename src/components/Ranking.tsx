@@ -3,14 +3,14 @@ import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestor
 import { db } from "../lib/firebase";
 import { RankingEntry } from "../types";
 import { formatCurrency } from "../lib/utils";
-import { Trophy, Zap, Trash2, Calendar } from "lucide-react";
+import { Trophy, Zap, Trash2, Calendar, RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuth } from "../contexts/AuthContext";
 import { format, startOfWeek, endOfWeek, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function Ranking() {
-  const { user, isAdmin, deleteUser } = useAuth();
+  const { user, isAdmin, deleteUser, clearUserHistory } = useAuth();
   const [entries, setEntries] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
@@ -111,25 +111,43 @@ export function Ranking() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <span className="font-black text-emerald-600 text-lg tabular-nums">
                 {formatCurrency(view === 'weekly' ? (entry.weeklyGross || 0) : (entry.monthlyGross || 0))}
               </span>
               {isAdmin && (
-                <button
-                  onClick={async () => {
-                    if (confirm(`Excluir ${entry.nickname}?`)) {
-                      try {
-                        await deleteUser(entry.userId);
-                      } catch (e: any) {
-                        alert(e.message);
+                <div className="flex items-center gap-1 border-l border-slate-200 ml-2 pl-2">
+                  <button
+                    onClick={async () => {
+                      if (confirm(`ZERAR histórico de ${entry.nickname}? (Transações e totais serão apagados, o perfil permanece)`)) {
+                        try {
+                          await clearUserHistory(entry.userId);
+                        } catch (e: any) {
+                          alert(e.message);
+                        }
                       }
-                    }
-                  }}
-                  className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
+                    }}
+                    className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Zerar Histórico"
+                  >
+                    <RotateCcw size={16} />
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (confirm(`EXCLUIR PERFIL de ${entry.nickname}? (Tudo será apagado e o usuário precisará se cadastrar de novo)`)) {
+                        try {
+                          await deleteUser(entry.userId);
+                        } catch (e: any) {
+                          alert(e.message);
+                        }
+                      }
+                    }}
+                    className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                    title="Excluir Perfil"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               )}
             </div>
           </motion.div>

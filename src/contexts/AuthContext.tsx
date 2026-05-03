@@ -15,6 +15,7 @@ interface AuthContextType {
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
   resetProfile: () => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
+  clearUserHistory: (userId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -145,6 +146,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const clearUserHistory = async (userId: string) => {
+    if (!isAdmin) throw new Error("Acesso negado");
+    try {
+      const { doc, collection, getDocs, writeBatch, serverTimestamp } = await import('firebase/firestore');
+      const batch = writeBatch(db);
+      
+      // 1. Clear transactions subcollection
+      const transactionsSnap = await getDocs(collection(db, `users/${userId}/transactions`));
+      transactionsSnap.forEach((tDoc) => {
+        batch.delete(tDoc.ref);
+      });
+      
+      // 2. Reset totals in user doc
+      const userRef = doc(db, 'users', userId);
+      batch.update(userRef, {
+        weeklyTotal: 0,
+        monthlyTotal: 0,
+        weeklyGross: 0,
+        monthlyGross: 0,
+        updatedAt: serverTimestamp()
+      });
+      
+      // 3. Reset totals in ranking doc
+      const rankingRef = doc(db, 'ranking', userId);
+      // We use set with merge:true in case the doc doesn't exist
+      batch.set(rankingRef, {
+        weeklyTotal: 0,
+        monthlyTotal: 0,
+        weeklyGross: 0,
+        monthlyGross: 0,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      
+      await batch.commit();
+      console.log(`History cleared successfully for ${userId}`);
+    } catch (error) {
+      console.error("Error clearing user history:", error);
+      throw error;
+    }
+  };
+
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!user) {
       console.warn("Attempted to update profile without a logged in user");
@@ -198,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signUpPhone, signInPhone, logout, updateProfile, resetProfile, deleteUser }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signUpPhone, signInPhone, logout, updateProfile, resetProfile, deleteUser, clearUserHistory }}>
       {children}
     </AuthContext.Provider>
   );
