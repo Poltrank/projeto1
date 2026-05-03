@@ -1,9 +1,11 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon, Settings } from "lucide-react";
+import { SettingsModal } from "./SettingsModal";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { logout, resetProfile, user, profile, isAdmin } = useAuth();
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   const handleReset = async () => {
     const confirmed = window.confirm("CUIDADO: Isso apagará TODOS os seus lançamentos, seu perfil e seu ranking. Você precisará se cadastrar novamente. Confirma?");
@@ -57,6 +59,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
             {user && (
               <button 
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 text-slate-500 hover:text-emerald-400 transition-colors"
+                title="Configurações"
+              >
+                <Settings size={18} />
+              </button>
+            )}
+            {user && (
+              <button 
                 onClick={() => logout()}
                 className="p-2 text-slate-500 hover:text-rose-400 transition-colors"
                 title="Sair"
@@ -67,6 +78,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
+
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       <main className="flex-1 bg-white max-w-lg mx-auto w-full shadow-inner pb-32">
         {children}

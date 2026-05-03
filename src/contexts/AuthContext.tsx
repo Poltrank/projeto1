@@ -165,8 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const profileData = { uid: user.uid, ...docSnap.data() } as UserProfile;
         setProfile(profileData);
         
-        // Update ranking if opted in
-        if (updatedData.rankingOptIn || profileData.rankingOptIn) {
+        // Handle ranking based on opt-in state
+        if (profileData.rankingOptIn) {
           const rankingRef = doc(db, 'ranking', user.uid);
           await setDoc(rankingRef, {
             userId: user.uid,
@@ -181,6 +181,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             updatedAt: serverTimestamp(),
           }, { merge: true });
           console.log("Ranking updated");
+        } else {
+          // If rankingOptIn is false, ensure ranking doc is deleted
+          const { deleteDoc } = await import('firebase/firestore');
+          const rankingRef = doc(db, 'ranking', user.uid);
+          await deleteDoc(rankingRef);
+          console.log("Ranking document removed (opted out)");
         }
       }
       console.log("Profile update complete");
