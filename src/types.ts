@@ -12,6 +12,8 @@ export interface UserProfile {
   monthlyInternet?: number;
   monthlyTires?: number;
   monthlyMaintenance?: number;
+  targetMonthlyNet?: number;
+  targetDaysPerMonth?: number;
   rankingOptIn: boolean;
   weeklyTotal: number;
   monthlyTotal: number;

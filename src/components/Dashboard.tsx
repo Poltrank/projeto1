@@ -1,7 +1,7 @@
 import { formatCurrency } from "../lib/utils";
 import { UserProfile } from "../types";
 import { motion } from "motion/react";
-import { Calendar } from "lucide-react";
+import { Calendar, Target } from "lucide-react";
 import { format, startOfWeek, endOfWeek, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -14,8 +14,14 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / 30 : 0;
   const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
 
+  const targetDailyNet = profile.targetMonthlyNet && profile.targetDaysPerMonth ? (profile.targetMonthlyNet / profile.targetDaysPerMonth) : 0;
+  const targetDailyGross = targetDailyNet > 0 ? targetDailyNet + dailyFixedCost : 0;
+
   const now = new Date();
   const registrationDate = profile.createdAt ? new Date(profile.createdAt) : now;
+  const daysActive = Math.max(1, differenceInDays(now, registrationDate) + 1);
+  const averageDaily = (profile.monthlyGross || 0) / daysActive;
+
   const startOfW = startOfWeek(now, { weekStartsOn: 1 });
   
   // Only count insurance from the LATER of (start of week) or (registration date)
@@ -43,6 +49,39 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
 
   return (
     <div className="p-6 space-y-6">
+      {targetDailyGross > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-emerald-500 border border-emerald-400 p-6 rounded-[32px] shadow-xl shadow-emerald-500/20 text-white"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-xl text-white">
+                <Target size={20} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest leading-none mb-1">Sua Meta Diária</p>
+                <p className="text-3xl font-black tracking-tighter italic font-mono leading-none">{formatCurrency(targetDailyGross)}</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+            <div>
+              <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Média Faturamento</p>
+              <p className="text-sm font-black italic font-mono">
+                {formatCurrency(averageDaily)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Faltam p/ Dia</p>
+              <p className="text-sm font-black italic font-mono">
+                {formatCurrency(Math.max(0, targetDailyGross - averageDaily))}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
       <div className="grid grid-cols-1 gap-3">
         <motion.div 
           initial={{ opacity: 0, y: 10 }}

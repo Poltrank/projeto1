@@ -224,6 +224,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             monthlyInternet: data.monthlyInternet !== undefined ? data.monthlyInternet : profileData.monthlyInternet || 0,
             monthlyTires: data.monthlyTires !== undefined ? data.monthlyTires : profileData.monthlyTires || 0,
             monthlyMaintenance: data.monthlyMaintenance !== undefined ? data.monthlyMaintenance : profileData.monthlyMaintenance || 0,
+            targetMonthlyNet: data.targetMonthlyNet !== undefined ? data.targetMonthlyNet : profileData.targetMonthlyNet || 0,
+            targetDaysPerMonth: data.targetDaysPerMonth !== undefined ? data.targetDaysPerMonth : profileData.targetDaysPerMonth || 25,
             lastElectricityBill: data.lastElectricityBill !== undefined ? data.lastElectricityBill : profileData.lastElectricityBill || 0,
             updatedAt: serverTimestamp(),
           }, { merge: true });

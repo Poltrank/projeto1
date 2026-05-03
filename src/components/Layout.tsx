@@ -1,7 +1,8 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { LogOut, User as UserIcon, Settings, Home, History } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Home, History, Target } from "lucide-react";
 import { SettingsModal } from "./SettingsModal";
+import { GoalModal } from "./GoalModal";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface LayoutProps {
 export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
   const { logout, resetProfile, user, profile, isAdmin } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+  const [isGoalOpen, setIsGoalOpen] = React.useState(false);
 
   const handleReset = async () => {
     const confirmed = window.confirm("CUIDADO: Isso apagará TODOS os seus lançamentos, seu perfil e seu ranking. Você precisará se cadastrar novamente. Confirma?");
@@ -86,6 +88,7 @@ export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
       </header>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <GoalModal isOpen={isGoalOpen} onClose={() => setIsGoalOpen(false)} />
 
       <main className="flex-1 bg-white max-w-lg mx-auto w-full shadow-inner pb-32">
         {children}
@@ -104,6 +107,13 @@ export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
             >
               <Home size={18} />
               <span className="text-xs uppercase tracking-tight">Início</span>
+            </button>
+            <button
+              onClick={() => setIsGoalOpen(true)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all text-slate-400 hover:text-white font-bold`}
+            >
+              <Target size={18} />
+              <span className="text-xs uppercase tracking-tight">Meta</span>
             </button>
             <button
               onClick={() => setActiveTab('history')}

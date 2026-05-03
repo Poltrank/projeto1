@@ -14,6 +14,8 @@ const profileSchema = z.object({
   monthlyInternet: z.number().min(0).optional(),
   monthlyTires: z.number().min(0).optional(),
   monthlyMaintenance: z.number().min(0).optional(),
+  targetMonthlyNet: z.number().min(0).optional(),
+  targetDaysPerMonth: z.number().min(1).max(31).optional(),
   lastElectricityBill: z.number().min(0).optional(),
   rankingOptIn: z.boolean(),
 });
@@ -36,6 +38,8 @@ export function RegistrationForm() {
       monthlyInternet: 0,
       monthlyTires: 0,
       monthlyMaintenance: 0,
+      targetMonthlyNet: 0,
+      targetDaysPerMonth: 25,
       lastElectricityBill: 0,
       rankingOptIn: true,
       nickname: "", // Ensure explicit defaults
