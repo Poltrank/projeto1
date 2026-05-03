@@ -11,6 +11,7 @@
         "carType": { "type": "string", "enum": ["Combustão", "Elétrico"], "description": "Type of car engine." },
         "monthlyInsurance": { "type": "number", "description": "Monthly insurance cost." },
         "lastElectricityBill": { "type": "number", "description": "Previous month's electricity bill for electric cars." },
+        "monthlyVehicleCost": { "type": "number", "description": "Monthly vehicle cost (rent or financing)." },
         "rankingOptIn": { "type": "boolean", "description": "Whether the user wants to be in the ranking." },
         "weeklyTotal": { "type": "number", "description": "Total earnings for the current week." },
         "monthlyTotal": { "type": "number", "description": "Total earnings for the month." },

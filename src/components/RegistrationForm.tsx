@@ -10,6 +10,7 @@ const profileSchema = z.object({
   car: z.string().min(2, "Informe seu carro"),
   carType: z.enum(["Combustão", "Elétrico"]),
   monthlyInsurance: z.number().min(0),
+  monthlyVehicleCost: z.number().min(0).optional(),
   lastElectricityBill: z.number().min(0).optional(),
   rankingOptIn: z.boolean(),
 });
@@ -28,6 +29,7 @@ export function RegistrationForm() {
     defaultValues: {
       carType: "Combustão",
       monthlyInsurance: 0,
+      monthlyVehicleCost: 0,
       lastElectricityBill: 0,
       rankingOptIn: true,
       nickname: "", // Ensure explicit defaults
@@ -104,7 +106,7 @@ export function RegistrationForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest pl-1">Seguro Mensal (R$)</label>
             <input
@@ -112,6 +114,17 @@ export function RegistrationForm() {
               step="0.01"
               {...register("monthlyInsurance", { valueAsNumber: true })}
               className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest pl-1">Aluguel/Financ. (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              {...register("monthlyVehicleCost", { valueAsNumber: true })}
+              className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+              placeholder="0.00"
             />
           </div>
 

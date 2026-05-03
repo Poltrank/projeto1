@@ -8,6 +8,7 @@ export interface UserProfile {
   carType: CarType;
   monthlyInsurance: number;
   lastElectricityBill?: number;
+  monthlyVehicleCost?: number;
   rankingOptIn: boolean;
   weeklyTotal: number;
   monthlyTotal: number;

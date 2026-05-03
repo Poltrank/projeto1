@@ -63,8 +63,9 @@ export function MonthlyHistory() {
         
         const registrationDate = profile.createdAt ? startOfDay(new Date(profile.createdAt)) : startOfDay(now);
         const insuranceDaily = (profile.monthlyInsurance || 0) / 30;
+        const vehicleDaily = (profile.monthlyVehicleCost || 0) / 30;
         const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / 30 : 0;
-        const dailyFixedCost = insuranceDaily + electricityDaily;
+        const dailyFixedCost = insuranceDaily + vehicleDaily + electricityDaily;
 
         const monthSummaries: MonthSummary[] = months.reverse().map(monthDate => {
           const mTransactions = allTransactions.filter(t => isSameMonth(parseISO(t.date), monthDate));
