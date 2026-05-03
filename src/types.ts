@@ -9,6 +9,7 @@ export interface UserProfile {
   monthlyInsurance: number;
   lastElectricityBill?: number;
   monthlyVehicleCost?: number;
+  monthlyInternet?: number;
   rankingOptIn: boolean;
   weeklyTotal: number;
   monthlyTotal: number;

@@ -11,6 +11,7 @@ const profileSchema = z.object({
   carType: z.enum(["Combustão", "Elétrico"]),
   monthlyInsurance: z.number().min(0),
   monthlyVehicleCost: z.number().min(0).optional(),
+  monthlyInternet: z.number().min(0).optional(),
   lastElectricityBill: z.number().min(0).optional(),
   rankingOptIn: z.boolean(),
 });
@@ -30,6 +31,7 @@ export function RegistrationForm() {
       carType: "Combustão",
       monthlyInsurance: 0,
       monthlyVehicleCost: 0,
+      monthlyInternet: 0,
       lastElectricityBill: 0,
       rankingOptIn: true,
       nickname: "", // Ensure explicit defaults
@@ -123,6 +125,17 @@ export function RegistrationForm() {
               type="number"
               step="0.01"
               {...register("monthlyVehicleCost", { valueAsNumber: true })}
+              className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest pl-1">Internet (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              {...register("monthlyInternet", { valueAsNumber: true })}
               className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
               placeholder="0.00"
             />
