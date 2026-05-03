@@ -14,6 +14,8 @@ const profileSchema = z.object({
   monthlyInsurance: z.number().min(0, "O valor deve ser positivo"),
   monthlyVehicleCost: z.number().min(0).optional(),
   monthlyInternet: z.number().min(0).optional(),
+  monthlyTires: z.number().min(0).optional(),
+  monthlyMaintenance: z.number().min(0).optional(),
   lastElectricityBill: z.number().min(0).optional(),
   rankingOptIn: z.boolean(),
 });
@@ -42,6 +44,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       monthlyInsurance: profile?.monthlyInsurance || 0,
       monthlyVehicleCost: profile?.monthlyVehicleCost || 0,
       monthlyInternet: profile?.monthlyInternet || 0,
+      monthlyTires: profile?.monthlyTires || 0,
+      monthlyMaintenance: profile?.monthlyMaintenance || 0,
       lastElectricityBill: profile?.lastElectricityBill || 0,
       rankingOptIn: profile?.rankingOptIn ?? true,
     },
@@ -139,6 +143,34 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {...register("monthlyInternet", { valueAsNumber: true })}
                   className="w-full bg-slate-800 border border-slate-700 pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                   placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase text-blue-400 mb-2 tracking-widest pl-1">Troca de Pneu (R$)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 font-bold text-xs uppercase">R$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  {...register("monthlyTires", { valueAsNumber: true })}
+                  className="w-full bg-slate-800 border-blue-900/30 border pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Custos mensais"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase text-amber-500 mb-2 tracking-widest pl-1">Revisão (R$)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 font-bold text-xs uppercase">R$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  {...register("monthlyMaintenance", { valueAsNumber: true })}
+                  className="w-full bg-slate-800 border-amber-900/30 border pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                  placeholder="Custos mensais"
                 />
               </div>
             </div>

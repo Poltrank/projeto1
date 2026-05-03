@@ -12,6 +12,8 @@ const profileSchema = z.object({
   monthlyInsurance: z.number().min(0),
   monthlyVehicleCost: z.number().min(0).optional(),
   monthlyInternet: z.number().min(0).optional(),
+  monthlyTires: z.number().min(0).optional(),
+  monthlyMaintenance: z.number().min(0).optional(),
   lastElectricityBill: z.number().min(0).optional(),
   rankingOptIn: z.boolean(),
 });
@@ -32,6 +34,8 @@ export function RegistrationForm() {
       monthlyInsurance: 0,
       monthlyVehicleCost: 0,
       monthlyInternet: 0,
+      monthlyTires: 0,
+      monthlyMaintenance: 0,
       lastElectricityBill: 0,
       rankingOptIn: true,
       nickname: "", // Ensure explicit defaults
@@ -138,6 +142,28 @@ export function RegistrationForm() {
               {...register("monthlyInternet", { valueAsNumber: true })}
               className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
               placeholder="0.00"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest pl-1 text-blue-500">Troca de Pneu (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              {...register("monthlyTires", { valueAsNumber: true })}
+              className="w-full p-4 bg-blue-50 rounded-2xl border border-blue-100 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Só este mês"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest pl-1 text-amber-600">Revisão/Manut. (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              {...register("monthlyMaintenance", { valueAsNumber: true })}
+              className="w-full p-4 bg-amber-50 rounded-2xl border border-amber-100 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none"
+              placeholder="Só este mês"
             />
           </div>
 

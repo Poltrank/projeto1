@@ -13,6 +13,8 @@
         "lastElectricityBill": { "type": "number", "description": "Previous month's electricity bill for electric cars." },
         "monthlyVehicleCost": { "type": "number", "description": "Monthly vehicle cost (rent or financing)." },
         "monthlyInternet": { "type": "number", "description": "Monthly internet cost." },
+        "monthlyTires": { "type": "number", "description": "Occasional tire replacement cost for the month." },
+        "monthlyMaintenance": { "type": "number", "description": "Occasional vehicle maintenance cost for the month." },
         "rankingOptIn": { "type": "boolean", "description": "Whether the user wants to be in the ranking." },
         "weeklyTotal": { "type": "number", "description": "Total earnings for the current week." },
         "monthlyTotal": { "type": "number", "description": "Total earnings for the month." },

@@ -9,8 +9,10 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const insuranceDaily = (profile.monthlyInsurance || 0) / 30;
   const vehicleDaily = (profile.monthlyVehicleCost || 0) / 30;
   const internetDaily = (profile.monthlyInternet || 0) / 30;
+  const tiresDaily = (profile.monthlyTires || 0) / 30;
+  const maintenanceDaily = (profile.monthlyMaintenance || 0) / 30;
   const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / 30 : 0;
-  const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + electricityDaily;
+  const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
 
   const now = new Date();
   const registrationDate = profile.createdAt ? new Date(profile.createdAt) : now;
@@ -88,6 +90,8 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
                 profile.monthlyInsurance ? 'Seguro' : null,
                 profile.monthlyVehicleCost ? 'Veículo' : null,
                 profile.monthlyInternet ? 'Internet' : null,
+                profile.monthlyTires ? 'Pneus' : null,
+                profile.monthlyMaintenance ? 'Revisão' : null,
                 profile.carType === 'Elétrico' && profile.lastElectricityBill ? 'Luz' : null
               ].filter(Boolean).join(' + ') || 'Nenhum'})
             </p>

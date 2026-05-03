@@ -222,6 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             monthlyInsurance: data.monthlyInsurance !== undefined ? data.monthlyInsurance : profileData.monthlyInsurance || 0,
             monthlyVehicleCost: data.monthlyVehicleCost !== undefined ? data.monthlyVehicleCost : profileData.monthlyVehicleCost || 0,
             monthlyInternet: data.monthlyInternet !== undefined ? data.monthlyInternet : profileData.monthlyInternet || 0,
+            monthlyTires: data.monthlyTires !== undefined ? data.monthlyTires : profileData.monthlyTires || 0,
+            monthlyMaintenance: data.monthlyMaintenance !== undefined ? data.monthlyMaintenance : profileData.monthlyMaintenance || 0,
             lastElectricityBill: data.lastElectricityBill !== undefined ? data.lastElectricityBill : profileData.lastElectricityBill || 0,
             updatedAt: serverTimestamp(),
           }, { merge: true });
