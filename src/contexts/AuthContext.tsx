@@ -178,6 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             weeklyGross: data.weeklyGross !== undefined ? data.weeklyGross : profileData.weeklyGross || 0,
             monthlyGross: data.monthlyGross !== undefined ? data.monthlyGross : profileData.monthlyGross || 0,
             monthlyInsurance: data.monthlyInsurance !== undefined ? data.monthlyInsurance : profileData.monthlyInsurance || 0,
+            lastElectricityBill: data.lastElectricityBill !== undefined ? data.lastElectricityBill : profileData.lastElectricityBill || 0,
             updatedAt: serverTimestamp(),
           }, { merge: true });
           console.log("Ranking updated");

@@ -10,6 +10,7 @@ const profileSchema = z.object({
   car: z.string().min(2, "Informe seu carro"),
   carType: z.enum(["Combustão", "Elétrico"]),
   monthlyInsurance: z.number().min(0),
+  lastElectricityBill: z.number().min(0).optional(),
   rankingOptIn: z.boolean(),
 });
 
@@ -20,17 +21,21 @@ export function RegistrationForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       carType: "Combustão",
       monthlyInsurance: 0,
+      lastElectricityBill: 0,
       rankingOptIn: true,
       nickname: "", // Ensure explicit defaults
       car: "",
     },
   });
+
+  const carType = watch("carType");
 
   const onSubmit = async (data: ProfileValues) => {
     console.log("Iniciando salvamento de perfil:", data);
@@ -99,13 +104,32 @@ export function RegistrationForm() {
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Seguro Mensal (R$)</label>
-          <input
-            type="number"
-            {...register("monthlyInsurance", { valueAsNumber: true })}
-            className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest pl-1">Seguro Mensal (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              {...register("monthlyInsurance", { valueAsNumber: true })}
+              className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+            />
+          </div>
+
+          {carType === "Elétrico" && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest pl-1">Conta de Luz Anterior (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                {...register("lastElectricityBill", { valueAsNumber: true })}
+                className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                placeholder="Ex: 150.00"
+              />
+            </motion.div>
+          )}
         </div>
 
         <div className="flex items-start gap-4 p-5 bg-emerald-50 rounded-2xl border border-emerald-100">

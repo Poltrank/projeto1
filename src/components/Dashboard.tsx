@@ -6,7 +6,9 @@ import { format, startOfWeek, endOfWeek, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function Dashboard({ profile }: { profile: UserProfile }) {
-  const dailyFixedCost = (profile.monthlyInsurance || 0) / 30;
+  const insuranceDaily = (profile.monthlyInsurance || 0) / 30;
+  const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / 30 : 0;
+  const dailyFixedCost = insuranceDaily + electricityDaily;
 
   const now = new Date();
   const registrationDate = profile.createdAt ? new Date(profile.createdAt) : now;
@@ -70,14 +72,19 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
       </div>
 
       <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
-        <div className="bg-emerald-500 p-2 rounded-xl text-white">
+        <div className="bg-emerald-500 p-2 rounded-xl text-white shadow-lg shadow-emerald-500/20">
           <Calendar size={18} />
         </div>
-        <div>
-          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">Custo Fixo Diário</p>
-          <p className="text-sm font-bold text-slate-800">
-            {formatCurrency(dailyFixedCost)} <span className="text-slate-400 font-normal ml-1">em seguro</span>
-          </p>
+        <div className="flex-1">
+          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">Custo Fixo Diário Estimado</p>
+          <div className="flex items-end gap-2">
+            <p className="text-sm font-black text-slate-900 leading-none">
+              {formatCurrency(dailyFixedCost)} 
+            </p>
+            <p className="text-[9px] text-slate-400 font-bold uppercase">
+              {profile.carType === 'Elétrico' ? '(Seguro + Luz)' : '(Seguro)'}
+            </p>
+          </div>
         </div>
       </div>
     </div>

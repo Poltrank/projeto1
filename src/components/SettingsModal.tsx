@@ -5,12 +5,14 @@ import * as z from "zod";
 import { useAuth } from "../contexts/AuthContext";
 import { Modal } from "./Modal";
 import { Settings as SettingsIcon, Save } from "lucide-react";
+import { motion } from "motion/react";
 
 const profileSchema = z.object({
   nickname: z.string().min(3, "Mínimo 3 caracteres").max(20, "Máximo 20 caracteres"),
   car: z.string().min(2, "Informe seu carro"),
   carType: z.enum(["Combustão", "Elétrico"]),
   monthlyInsurance: z.number().min(0, "O valor deve ser positivo"),
+  lastElectricityBill: z.number().min(0).optional(),
   rankingOptIn: z.boolean(),
 });
 
@@ -27,6 +29,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -35,9 +38,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       car: profile?.car || "",
       carType: profile?.carType || "Combustão",
       monthlyInsurance: profile?.monthlyInsurance || 0,
+      lastElectricityBill: profile?.lastElectricityBill || 0,
       rankingOptIn: profile?.rankingOptIn ?? true,
     },
   });
+
+  const carType = watch("carType");
 
   const onSubmit = async (data: ProfileValues) => {
     try {
@@ -90,18 +96,39 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest pl-1">Seguro Mensal (R$)</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">R$</span>
-              <input
-                type="number"
-                step="0.01"
-                {...register("monthlyInsurance", { valueAsNumber: true })}
-                className="w-full bg-slate-800 border border-slate-700 pl-12 p-4 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest pl-1">Seguro Mensal (R$)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs uppercase">R$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  {...register("monthlyInsurance", { valueAsNumber: true })}
+                  className="w-full bg-slate-800 border border-slate-700 pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                />
+              </div>
+              {errors.monthlyInsurance && <p className="text-rose-500 text-[10px] mt-1 font-bold pl-1">{errors.monthlyInsurance.message}</p>}
             </div>
-            {errors.monthlyInsurance && <p className="text-rose-500 text-[10px] mt-1 font-bold pl-1">{errors.monthlyInsurance.message}</p>}
+
+            {carType === "Elétrico" && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest pl-1">Luz Mês Anterior (R$)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs uppercase">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    {...register("lastElectricityBill", { valueAsNumber: true })}
+                    className="w-full bg-slate-800 border border-slate-700 pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                    placeholder="Ex: 150,00"
+                  />
+                </div>
+              </motion.div>
+            )}
           </div>
 
           <div className="flex items-start gap-3 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
