@@ -10,12 +10,14 @@ import { RegistrationForm } from './components/RegistrationForm';
 import { Dashboard } from './components/Dashboard';
 import { EntryActions } from './components/EntryActions';
 import { Ranking } from './components/Ranking';
+import { MonthlyHistory } from './components/MonthlyHistory';
 import { motion } from 'motion/react';
 import { LogIn } from 'lucide-react';
 
 function AppContent() {
   const { user, profile, loading, isAdmin, signInPhone, signUpPhone } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [activeTab, setActiveTab] = useState<'home' | 'history'>('home');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
@@ -160,10 +162,16 @@ function AppContent() {
   }
 
   return (
-    <Layout>
-      <Dashboard profile={profile} />
-      <EntryActions />
-      <Ranking />
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+      {activeTab === 'home' ? (
+        <>
+          <Dashboard profile={profile} />
+          <EntryActions />
+          <Ranking />
+        </>
+      ) : (
+        <MonthlyHistory />
+      )}
     </Layout>
   );
 }

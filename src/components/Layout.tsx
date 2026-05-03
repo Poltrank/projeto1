@@ -1,9 +1,15 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { LogOut, User as UserIcon, Settings } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Home, History } from "lucide-react";
 import { SettingsModal } from "./SettingsModal";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+interface LayoutProps {
+  children: React.ReactNode;
+  activeTab?: 'home' | 'history';
+  setActiveTab?: (tab: 'home' | 'history') => void;
+}
+
+export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
   const { logout, resetProfile, user, profile, isAdmin } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
@@ -84,6 +90,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 bg-white max-w-lg mx-auto w-full shadow-inner pb-32">
         {children}
       </main>
+
+      {user && setActiveTab && (
+        <nav className="fixed bottom-14 left-0 right-0 flex justify-center z-40 px-6">
+          <div className="bg-slate-900 border border-white/10 p-2 rounded-2xl flex items-center gap-1 shadow-2xl shadow-black/50 backdrop-blur-md">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all ${
+                activeTab === 'home' 
+                ? 'bg-emerald-500 text-slate-950 font-black' 
+                : 'text-slate-400 hover:text-white font-bold'
+              }`}
+            >
+              <Home size={18} />
+              <span className="text-xs uppercase tracking-tight">Início</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all ${
+                activeTab === 'history' 
+                ? 'bg-emerald-500 text-slate-950 font-black' 
+                : 'text-slate-400 hover:text-white font-bold'
+              }`}
+            >
+              <History size={18} />
+              <span className="text-xs uppercase tracking-tight">Histórico</span>
+            </button>
+          </div>
+        </nav>
+      )}
 
       <footer className="fixed bottom-0 left-0 right-0 p-3 bg-slate-900 text-white text-center border-t border-white/10 z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
         <p className="text-[10px] opacity-70 leading-tight">
