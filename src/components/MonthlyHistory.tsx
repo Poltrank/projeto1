@@ -14,7 +14,8 @@ import {
   differenceInDays,
   isBefore,
   isAfter,
-  startOfDay
+  startOfDay,
+  getDaysInMonth
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
@@ -62,13 +63,6 @@ export function MonthlyHistory() {
         const months = eachMonthOfInterval({ start, end: now });
         
         const registrationDate = profile.createdAt ? startOfDay(new Date(profile.createdAt)) : startOfDay(now);
-        const insuranceDaily = (profile.monthlyInsurance || 0) / 30;
-        const vehicleDaily = (profile.monthlyVehicleCost || 0) / 30;
-        const internetDaily = (profile.monthlyInternet || 0) / 30;
-        const tiresDaily = (profile.monthlyTires || 0) / 30;
-        const maintenanceDaily = (profile.monthlyMaintenance || 0) / 30;
-        const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / 30 : 0;
-        const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
 
         const monthSummaries: MonthSummary[] = months.reverse().map(monthDate => {
           const mTransactions = allTransactions.filter(t => isSameMonth(parseISO(t.date), monthDate));
@@ -76,6 +70,15 @@ export function MonthlyHistory() {
           const income = mTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
           const expense = mTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
           
+          const daysInThisMonth = getDaysInMonth(monthDate);
+          const insuranceDaily = (profile.monthlyInsurance || 0) / daysInThisMonth;
+          const vehicleDaily = (profile.monthlyVehicleCost || 0) / daysInThisMonth;
+          const internetDaily = (profile.monthlyInternet || 0) / daysInThisMonth;
+          const tiresDaily = (profile.monthlyTires || 0) / daysInThisMonth;
+          const maintenanceDaily = (profile.monthlyMaintenance || 0) / daysInThisMonth;
+          const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / daysInThisMonth : 0;
+          const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
+
           // Calculate Fixed Cost for this month
           // Only count from the later of (start of month) or (registration date)
           const mStart = startOfMonth(monthDate);

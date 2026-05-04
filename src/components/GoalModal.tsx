@@ -7,6 +7,7 @@ import { Modal } from "./Modal";
 import { Target, Save, Calculator } from "lucide-react";
 import { motion } from "motion/react";
 import { formatCurrency } from "../lib/utils";
+import { getDaysInMonth } from "date-fns";
 
 const goalSchema = z.object({
   targetMonthlyNet: z.number().min(0, "O valor deve ser positivo"),
@@ -44,13 +45,16 @@ export function GoalModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const targetNet = watch("targetMonthlyNet") || 0;
   const targetDays = watch("targetDaysPerMonth") || 25;
 
+  const now = new Date();
+  const daysInCurrentMonth = getDaysInMonth(now);
+
   // Calculate required
-  const insuranceDaily = (profile?.monthlyInsurance || 0) / 30;
-  const vehicleDaily = (profile?.monthlyVehicleCost || 0) / 30;
-  const internetDaily = (profile?.monthlyInternet || 0) / 30;
-  const tiresDaily = (profile?.monthlyTires || 0) / 30;
-  const maintenanceDaily = (profile?.monthlyMaintenance || 0) / 30;
-  const electricityDaily = profile?.carType === 'Elétrico' ? (profile?.lastElectricityBill || 0) / 30 : 0;
+  const insuranceDaily = (profile?.monthlyInsurance || 0) / daysInCurrentMonth;
+  const vehicleDaily = (profile?.monthlyVehicleCost || 0) / daysInCurrentMonth;
+  const internetDaily = (profile?.monthlyInternet || 0) / daysInCurrentMonth;
+  const tiresDaily = (profile?.monthlyTires || 0) / daysInCurrentMonth;
+  const maintenanceDaily = (profile?.monthlyMaintenance || 0) / daysInCurrentMonth;
+  const electricityDaily = profile?.carType === 'Elétrico' ? (profile?.lastElectricityBill || 0) / daysInCurrentMonth : 0;
   const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
 
   const dailyNetNeeded = targetNet / targetDays;

@@ -2,22 +2,24 @@ import { formatCurrency } from "../lib/utils";
 import { UserProfile } from "../types";
 import { motion } from "motion/react";
 import { Calendar, Target } from "lucide-react";
-import { format, startOfWeek, endOfWeek, differenceInDays } from "date-fns";
+import { format, startOfWeek, endOfWeek, differenceInDays, getDaysInMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function Dashboard({ profile }: { profile: UserProfile }) {
-  const insuranceDaily = (profile.monthlyInsurance || 0) / 30;
-  const vehicleDaily = (profile.monthlyVehicleCost || 0) / 30;
-  const internetDaily = (profile.monthlyInternet || 0) / 30;
-  const tiresDaily = (profile.monthlyTires || 0) / 30;
-  const maintenanceDaily = (profile.monthlyMaintenance || 0) / 30;
-  const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / 30 : 0;
+  const now = new Date();
+  const daysInCurrentMonth = getDaysInMonth(now);
+
+  const insuranceDaily = (profile.monthlyInsurance || 0) / daysInCurrentMonth;
+  const vehicleDaily = (profile.monthlyVehicleCost || 0) / daysInCurrentMonth;
+  const internetDaily = (profile.monthlyInternet || 0) / daysInCurrentMonth;
+  const tiresDaily = (profile.monthlyTires || 0) / daysInCurrentMonth;
+  const maintenanceDaily = (profile.monthlyMaintenance || 0) / daysInCurrentMonth;
+  const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / daysInCurrentMonth : 0;
   const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
 
   const targetDailyNet = profile.targetMonthlyNet && profile.targetDaysPerMonth ? (profile.targetMonthlyNet / profile.targetDaysPerMonth) : 0;
   const targetDailyGross = targetDailyNet > 0 ? targetDailyNet + dailyFixedCost : 0;
 
-  const now = new Date();
   const registrationDate = profile.createdAt ? new Date(profile.createdAt) : now;
   const daysActive = Math.max(1, differenceInDays(now, registrationDate) + 1);
   const averageDaily = (profile.monthlyGross || 0) / daysActive;
