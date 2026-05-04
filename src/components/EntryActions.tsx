@@ -40,14 +40,15 @@ export function EntryActions() {
       if (type === 'income') {
         const q = query(
           transRef, 
-          where('type', '==', 'income'),
-          where('date', '>=', startOfMonth(new Date()).toISOString())
+          where('type', '==', 'income')
         );
         const snap = await getDocs(q);
         const categoryTotals: {[key: string]: number} = {};
+        const currentMonthStart = startOfMonth(new Date()).toISOString();
+
         snap.forEach(doc => {
           const t = doc.data();
-          if (t.category) {
+          if (t.category && t.date >= currentMonthStart) {
             categoryTotals[t.category] = (categoryTotals[t.category] || 0) + (t.amount || 0);
           }
         });
