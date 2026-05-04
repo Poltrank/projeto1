@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Modal } from "./Modal";
 import { db } from "../lib/firebase";
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
-import { startOfWeek, endOfWeek, isWithinInterval, parseISO } from "date-fns";
+import { startOfWeek, endOfWeek, isWithinInterval, parseISO, startOfMonth } from "date-fns";
 
 const EXPENSE_CATEGORIES = ["Alimentação", "Combustível", "Manutenção", "Outros"];
 const INCOME_CATEGORIES = ["99", "Uber", "Muvi", "Zopp", "Indriver", "Particular"];
@@ -35,8 +35,29 @@ export function EntryActions() {
         createdAt: serverTimestamp(),
       });
 
-      // 2. Simple update logic (for MVP, normally we'd sum all transactions)
-      // We'll increment totals in the profile for real-time dashboard updates
+      // 2. Calculate Top Category for the current month
+      const q = query(
+        transRef, 
+        where('type', '==', 'income'),
+        where('date', '>=', startOfMonth(new Date()).toISOString())
+      );
+      const snap = await getDocs(q);
+      const categoryTotals: {[key: string]: number} = {};
+      snap.forEach(doc => {
+        const t = doc.data();
+        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + (t.amount || 0);
+      });
+      
+      let topCat = profile.topCategory || "";
+      let maxAmount = 0;
+      Object.entries(categoryTotals).forEach(([cat, amt]) => {
+        if (amt > maxAmount) {
+          maxAmount = amt;
+          topCat = cat;
+        }
+      });
+
+      // 3. Simple update logic (for MVP, normally we'd sum all transactions)
       const diff = type === 'income' ? amount : -amount;
       const incomeDiff = type === 'income' ? amount : 0;
       await updateProfile({
@@ -45,6 +66,7 @@ export function EntryActions() {
         annualTotal: (profile.annualTotal || 0) + diff,
         weeklyGross: (profile.weeklyGross || 0) + incomeDiff,
         monthlyGross: (profile.monthlyGross || 0) + incomeDiff,
+        topCategory: topCat,
       });
 
       setModalType(null);

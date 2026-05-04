@@ -102,8 +102,17 @@ export function Ranking() {
                 {(index + 1).toString().padStart(2, '0')}
               </span>
               <div>
-                <p className="font-bold text-slate-800 leading-tight flex items-center gap-1">
+                <p className="font-bold text-slate-800 leading-tight flex items-center gap-2">
                   {entry.nickname}
+                  {entry.topCategory && (
+                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider border shadow-sm ${
+                      entry.topCategory === 'Particular' 
+                        ? 'bg-blue-500 text-white border-blue-400' 
+                        : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                    }`}>
+                      {entry.topCategory}
+                    </span>
+                  )}
                   {entry.carType === 'Elétrico' && <Zap size={12} className="text-emerald-500 fill-emerald-500" />}
                 </p>
                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">

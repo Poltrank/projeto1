@@ -14,6 +14,7 @@ export interface UserProfile {
   monthlyMaintenance?: number;
   targetMonthlyNet?: number;
   targetDaysPerMonth?: number;
+  topCategory?: string;
   rankingOptIn: boolean;
   weeklyTotal: number;
   monthlyTotal: number;
@@ -45,6 +46,7 @@ export interface RankingEntry {
   monthlyTotal: number;
   weeklyGross: number;
   monthlyGross: number;
+  topCategory?: string;
   monthlyInsurance: number;
   updatedAt: any;
 }

@@ -219,6 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             monthlyTotal: data.monthlyTotal !== undefined ? data.monthlyTotal : profileData.monthlyTotal || 0,
             weeklyGross: data.weeklyGross !== undefined ? data.weeklyGross : profileData.weeklyGross || 0,
             monthlyGross: data.monthlyGross !== undefined ? data.monthlyGross : profileData.monthlyGross || 0,
+            topCategory: data.topCategory !== undefined ? data.topCategory : profileData.topCategory || "",
             monthlyInsurance: data.monthlyInsurance !== undefined ? data.monthlyInsurance : profileData.monthlyInsurance || 0,
             monthlyVehicleCost: data.monthlyVehicleCost !== undefined ? data.monthlyVehicleCost : profileData.monthlyVehicleCost || 0,
             monthlyInternet: data.monthlyInternet !== undefined ? data.monthlyInternet : profileData.monthlyInternet || 0,
