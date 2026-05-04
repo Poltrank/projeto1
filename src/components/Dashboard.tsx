@@ -22,8 +22,6 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
 
   const registrationDate = profile.createdAt ? new Date(profile.createdAt) : now;
   const daysActive = Math.max(1, differenceInDays(now, registrationDate) + 1);
-  const averageDaily = (profile.monthlyGross || 0) / daysActive;
-
   const startOfW = startOfWeek(now, { weekStartsOn: 1 });
   
   // Only count insurance from the LATER of (start of week) or (registration date)
@@ -34,8 +32,8 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const hasActivity = (profile.weeklyTotal || 0) !== 0 || (profile.weeklyGross || 0) > 0;
   const weeklyInsuranceAccrued = hasActivity ? (daysInWeekCounted * dailyFixedCost) : 0;
   
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const effectivelyStartedMonthAt = registrationDate > startOfMonth ? registrationDate : startOfMonth;
+  const startOfMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  const effectivelyStartedMonthAt = registrationDate > startOfMonthDate ? registrationDate : startOfMonthDate;
   const daysInMonthCounted = differenceInDays(now, effectivelyStartedMonthAt) + 1;
   const hasMonthlyActivity = (profile.monthlyTotal || 0) !== 0 || (profile.monthlyGross || 0) > 0;
   const monthlyInsuranceAccrued = hasMonthlyActivity ? (daysInMonthCounted * dailyFixedCost) : 0;
@@ -43,6 +41,10 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   // Accrued insurance since registration or just for display logic
   const netWeekly = hasActivity ? (profile.weeklyTotal || 0) - weeklyInsuranceAccrued : 0;
   const netMonthly = hasMonthlyActivity ? (profile.monthlyTotal || 0) - monthlyInsuranceAccrued : 0;
+
+  // Average Daily calculations within the current month
+  const averageDailyNet = hasMonthlyActivity ? netMonthly / daysInMonthCounted : 0;
+  const missingDailyNet = Math.max(0, targetDailyNet - averageDailyNet);
 
   const getWeekRange = () => {
     const end = endOfWeek(now, { weekStartsOn: 1 });
@@ -63,22 +65,26 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
                 <Target size={20} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest leading-none mb-1">Sua Meta Diária</p>
-                <p className="text-3xl font-black tracking-tighter italic font-mono leading-none">{formatCurrency(targetDailyGross)}</p>
+                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest leading-none mb-1">Meta Líquida Diária</p>
+                <p className="text-3xl font-black tracking-tighter italic font-mono leading-none">{formatCurrency(targetDailyNet)}</p>
               </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Necessário Bruto</p>
+              <p className="text-sm font-black italic font-mono opacity-90">{formatCurrency(targetDailyGross)}</p>
             </div>
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-white/10">
             <div>
-              <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Média Faturamento</p>
+              <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Média Líquida</p>
               <p className="text-sm font-black italic font-mono">
-                {formatCurrency(averageDaily)}
+                {formatCurrency(averageDailyNet)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Faltam p/ Dia</p>
+              <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Falta (Líquido)</p>
               <p className="text-sm font-black italic font-mono">
-                {formatCurrency(Math.max(0, targetDailyGross - averageDaily))}
+                {formatCurrency(missingDailyNet)}
               </p>
             </div>
           </div>
