@@ -107,7 +107,13 @@ export function Ranking() {
                   {entry.topCategory && (
                     <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider border shadow-sm ${
                       entry.topCategory === 'Particular' 
-                        ? 'bg-blue-500 text-white border-blue-400' 
+                        ? 'bg-blue-600 text-white border-blue-400' 
+                        : entry.topCategory === 'Uber'
+                        ? 'bg-black text-white border-slate-800'
+                        : entry.topCategory === '99'
+                        ? 'bg-yellow-400 text-black border-yellow-500'
+                        : entry.topCategory === 'Indriver'
+                        ? 'bg-cyan-500 text-white border-cyan-400'
                         : 'bg-emerald-100 text-emerald-700 border-emerald-200'
                     }`}>
                       {entry.topCategory}

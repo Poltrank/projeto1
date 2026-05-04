@@ -36,26 +36,30 @@ export function EntryActions() {
       });
 
       // 2. Calculate Top Category for the current month
-      const q = query(
-        transRef, 
-        where('type', '==', 'income'),
-        where('date', '>=', startOfMonth(new Date()).toISOString())
-      );
-      const snap = await getDocs(q);
-      const categoryTotals: {[key: string]: number} = {};
-      snap.forEach(doc => {
-        const t = doc.data();
-        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + (t.amount || 0);
-      });
-      
       let topCat = profile.topCategory || "";
-      let maxAmount = 0;
-      Object.entries(categoryTotals).forEach(([cat, amt]) => {
-        if (amt > maxAmount) {
-          maxAmount = amt;
-          topCat = cat;
-        }
-      });
+      if (type === 'income') {
+        const q = query(
+          transRef, 
+          where('type', '==', 'income'),
+          where('date', '>=', startOfMonth(new Date()).toISOString())
+        );
+        const snap = await getDocs(q);
+        const categoryTotals: {[key: string]: number} = {};
+        snap.forEach(doc => {
+          const t = doc.data();
+          if (t.category) {
+            categoryTotals[t.category] = (categoryTotals[t.category] || 0) + (t.amount || 0);
+          }
+        });
+        
+        let maxAmount = 0;
+        Object.entries(categoryTotals).forEach(([cat, amt]) => {
+          if (amt > maxAmount) {
+            maxAmount = amt;
+            topCat = cat;
+          }
+        });
+      }
 
       // 3. Simple update logic (for MVP, normally we'd sum all transactions)
       const diff = type === 'income' ? amount : -amount;
