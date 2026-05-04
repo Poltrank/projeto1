@@ -46,6 +46,9 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const averageDailyNet = hasMonthlyActivity ? netMonthly / daysInMonthCounted : 0;
   const missingDailyNet = Math.max(0, targetDailyNet - averageDailyNet);
 
+  const monthlyGoal = profile.targetMonthlyNet || 0;
+  const progressPercentage = monthlyGoal > 0 ? Math.min(100, (netMonthly / monthlyGoal) * 100) : 0;
+
   const getWeekRange = () => {
     const end = endOfWeek(now, { weekStartsOn: 1 });
     return `${format(startOfW, "dd")} a ${format(end, "dd")} de ${format(now, "MMMM", { locale: ptBR })}`;
@@ -91,6 +94,49 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
         </motion.div>
       )}
       <div className="grid grid-cols-1 gap-3">
+        {profile.targetMonthlyNet && profile.targetMonthlyNet > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-slate-50 border border-slate-200 p-6 rounded-[32px] overflow-hidden relative"
+          >
+            <div className="flex items-center justify-between mb-4 relative z-10">
+              <div>
+                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Status Meta Mensal</p>
+                <div className="flex items-baseline gap-2">
+                  <h2 className="text-3xl font-black text-slate-900 tabular-nums leading-none">
+                    {formatCurrency(netMonthly)}
+                  </h2>
+                  <span className="text-sm font-bold text-slate-300">/ {formatCurrency(profile.targetMonthlyNet)}</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className={`text-2xl font-black italic font-mono leading-none ${progressPercentage >= 100 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                  {Math.round(progressPercentage)}%
+                </p>
+              </div>
+            </div>
+
+            <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner relative">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercentage}%` }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className={`h-full rounded-full shadow-lg ${
+                  progressPercentage >= 100 ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-blue-600 shadow-blue-500/20'
+                }`}
+              />
+            </div>
+
+            <p className="text-[10px] text-slate-400 mt-4 font-bold uppercase tracking-tight flex items-center justify-between">
+              <span>{progressPercentage >= 100 ? "Objetivo Alcançado! 🎯" : "Rumo ao seu salário desejado"}</span>
+              {progressPercentage < 100 && (
+                <span className="text-slate-500">Falta {formatCurrency(profile.targetMonthlyNet - netMonthly)}</span>
+              )}
+            </p>
+          </motion.div>
+        )}
+
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -112,8 +158,8 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
         
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
-            <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">Mensal (Líquido)</p>
-            <p className="text-xl font-black text-slate-800 tabular-nums">{formatCurrency(netMonthly)}</p>
+            <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">Mensal Bruto</p>
+            <p className="text-xl font-black text-slate-800 tabular-nums">{formatCurrency(profile.monthlyGross || 0)}</p>
           </div>
           <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
             <p className="text-slate-500 text-[10px] font-bold uppercase mb-1">Anual Total</p>
