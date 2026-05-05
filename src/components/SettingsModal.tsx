@@ -55,9 +55,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const onSubmit = async (data: ProfileValues) => {
     try {
+      const currentMonthKey = new Date().toISOString().substring(0, 7);
       await updateProfile({
         ...profile,
         ...data,
+        maintenanceMonth: data.monthlyMaintenance && data.monthlyMaintenance > 0 
+          ? (profile?.monthlyMaintenance === data.monthlyMaintenance ? profile?.maintenanceMonth : currentMonthKey) 
+          : undefined,
         updatedAt: new Date().toISOString(),
       });
       onClose();

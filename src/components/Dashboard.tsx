@@ -13,7 +13,8 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const vehicleDaily = (profile.monthlyVehicleCost || 0) / daysInCurrentMonth;
   const internetDaily = (profile.monthlyInternet || 0) / daysInCurrentMonth;
   const tiresDaily = (profile.monthlyTires || 0) / daysInCurrentMonth;
-  const maintenanceDaily = (profile.monthlyMaintenance || 0) / daysInCurrentMonth;
+  const currentMonthKey = format(now, 'yyyy-MM');
+  const maintenanceDaily = (profile.maintenanceMonth === currentMonthKey ? (profile.monthlyMaintenance || 0) : 0) / daysInCurrentMonth;
   const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / daysInCurrentMonth : 0;
   const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
 
@@ -184,7 +185,7 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
                 profile.monthlyVehicleCost ? 'Veículo' : null,
                 profile.monthlyInternet ? 'Internet' : null,
                 profile.monthlyTires ? 'Pneus' : null,
-                profile.monthlyMaintenance ? 'Revisão' : null,
+                (profile.maintenanceMonth === currentMonthKey && profile.monthlyMaintenance) ? 'Revisão' : null,
                 profile.carType === 'Elétrico' && profile.lastElectricityBill ? 'Luz' : null
               ].filter(Boolean).join(' + ') || 'Nenhum'})
             </p>

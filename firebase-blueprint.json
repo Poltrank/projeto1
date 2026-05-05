@@ -15,6 +15,7 @@
         "monthlyInternet": { "type": "number", "description": "Monthly internet cost." },
         "monthlyTires": { "type": "number", "description": "Occasional tire replacement cost for the month." },
         "monthlyMaintenance": { "type": "number", "description": "Occasional vehicle maintenance cost for the month." },
+        "maintenanceMonth": { "type": "string", "description": "The month (YYYY-MM) the maintenance applies to." },
         "targetMonthlyNet": { "type": "number", "description": "User's target net income per month." },
         "targetDaysPerMonth": { "type": "number", "description": "Target number of working days per month." },
         "rankingOptIn": { "type": "boolean", "description": "Whether the user wants to be in the ranking." },
@@ -50,6 +51,13 @@
         "car": { "type": "string" },
         "carType": { "type": "string" },
         "weeklyTotal": { "type": "number" },
+        "monthlyTotal": { "type": "number" },
+        "weeklyGross": { "type": "number" },
+        "monthlyGross": { "type": "number" },
+        "topCategory": { "type": "string" },
+        "monthlyInsurance": { "type": "number" },
+        "monthlyMaintenance": { "type": "number" },
+        "maintenanceMonth": { "type": "string" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "nickname", "weeklyTotal"]

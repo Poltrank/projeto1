@@ -12,6 +12,7 @@ export interface UserProfile {
   monthlyInternet?: number;
   monthlyTires?: number;
   monthlyMaintenance?: number;
+  maintenanceMonth?: string;
   targetMonthlyNet?: number;
   targetDaysPerMonth?: number;
   topCategory?: string;
@@ -48,5 +49,7 @@ export interface RankingEntry {
   monthlyGross: number;
   topCategory?: string;
   monthlyInsurance: number;
+  monthlyMaintenance?: number;
+  maintenanceMonth?: string;
   updatedAt: any;
 }

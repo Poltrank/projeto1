@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Modal } from "./Modal";
 import { db } from "../lib/firebase";
 import { collection, addDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
-import { startOfWeek, endOfWeek, isWithinInterval, parseISO, startOfMonth } from "date-fns";
+import { startOfWeek, endOfWeek, isWithinInterval, parseISO, startOfMonth, format } from "date-fns";
 
 const EXPENSE_CATEGORIES = ["Alimentação", "Combustível", "Manutenção", "Outros"];
 const INCOME_CATEGORIES = ["99", "Uber", "Muvi", "Zopp", "Indriver", "Particular"];
@@ -65,6 +65,10 @@ export function EntryActions() {
       // 3. Simple update logic (for MVP, normally we'd sum all transactions)
       const diff = type === 'income' ? amount : -amount;
       const incomeDiff = type === 'income' ? amount : 0;
+      
+      const currentMonthKey = format(new Date(), 'yyyy-MM');
+      const isMaintenance = type === 'expense' && category === 'Manutenção';
+      
       await updateProfile({
         weeklyTotal: (profile.weeklyTotal || 0) + diff,
         monthlyTotal: (profile.monthlyTotal || 0) + diff,
@@ -72,6 +76,10 @@ export function EntryActions() {
         weeklyGross: (profile.weeklyGross || 0) + incomeDiff,
         monthlyGross: (profile.monthlyGross || 0) + incomeDiff,
         topCategory: topCat,
+        ...(isMaintenance ? {
+          monthlyMaintenance: (profile.maintenanceMonth === currentMonthKey ? (profile.monthlyMaintenance || 0) : 0) + amount,
+          maintenanceMonth: currentMonthKey
+        } : {})
       });
 
       setModalType(null);
