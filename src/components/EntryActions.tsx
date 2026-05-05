@@ -21,8 +21,12 @@ export function EntryActions() {
     const formData = new FormData(e.currentTarget);
     const amount = Number(formData.get('amount'));
     const category = formData.get('category') as string;
+    const dateStr = formData.get('date') as string;
     const type = modalType!;
 
+    const now = new Date();
+    const entryDate = parseISO(dateStr);
+    
     try {
       // 1. Save Transaction
       const transRef = collection(db, 'users', user.uid, 'transactions');
@@ -31,24 +35,27 @@ export function EntryActions() {
         type,
         category,
         amount,
-        date: new Date().toISOString(),
+        date: dateStr,
         createdAt: serverTimestamp(),
       });
 
       // 2. Calculate Top Category for the current month
       let topCat = profile.topCategory || "";
-      if (type === 'income') {
+      const currentMonthStart = startOfMonth(now);
+      const isCurrentMonth = format(entryDate, 'yyyy-MM') === format(now, 'yyyy-MM');
+
+      if (type === 'income' && isCurrentMonth) {
         const q = query(
           transRef, 
           where('type', '==', 'income')
         );
         const snap = await getDocs(q);
         const categoryTotals: {[key: string]: number} = {};
-        const currentMonthStart = startOfMonth(new Date()).toISOString();
+        const currentMonthStartStr = currentMonthStart.toISOString();
 
         snap.forEach(doc => {
           const t = doc.data();
-          if (t.category && t.date >= currentMonthStart) {
+          if (t.category && t.date >= currentMonthStartStr) {
             categoryTotals[t.category] = (categoryTotals[t.category] || 0) + (t.amount || 0);
           }
         });
@@ -66,17 +73,22 @@ export function EntryActions() {
       const diff = type === 'income' ? amount : -amount;
       const incomeDiff = type === 'income' ? amount : 0;
       
-      const currentMonthKey = format(new Date(), 'yyyy-MM');
+      const currentMonthKey = format(now, 'yyyy-MM');
       const isMaintenance = type === 'expense' && category === 'Manutenção';
       
+      const isCurrentWeek = isWithinInterval(entryDate, {
+        start: startOfWeek(now, { weekStartsOn: 1 }),
+        end: endOfWeek(now, { weekStartsOn: 1 })
+      });
+
       await updateProfile({
-        weeklyTotal: (profile.weeklyTotal || 0) + diff,
-        monthlyTotal: (profile.monthlyTotal || 0) + diff,
-        annualTotal: (profile.annualTotal || 0) + diff,
-        weeklyGross: (profile.weeklyGross || 0) + incomeDiff,
-        monthlyGross: (profile.monthlyGross || 0) + incomeDiff,
+        weeklyTotal: isCurrentWeek ? (profile.weeklyTotal || 0) + diff : (profile.weeklyTotal || 0),
+        monthlyTotal: isCurrentMonth ? (profile.monthlyTotal || 0) + diff : (profile.monthlyTotal || 0),
+        annualTotal: (format(entryDate, 'yyyy') === format(now, 'yyyy')) ? (profile.annualTotal || 0) + diff : (profile.annualTotal || 0),
+        weeklyGross: isCurrentWeek ? (profile.weeklyGross || 0) + incomeDiff : (profile.weeklyGross || 0),
+        monthlyGross: isCurrentMonth ? (profile.monthlyGross || 0) + incomeDiff : (profile.monthlyGross || 0),
         topCategory: topCat,
-        ...(isMaintenance ? {
+        ...(isMaintenance && isCurrentMonth ? {
           monthlyMaintenance: (profile.maintenanceMonth === currentMonthKey ? (profile.monthlyMaintenance || 0) : 0) + amount,
           maintenanceMonth: currentMonthKey
         } : {})
@@ -118,6 +130,17 @@ export function EntryActions() {
       >
         <form onSubmit={handleSave} className="space-y-6">
           <div>
+            <label className="block text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">Data do Lançamento</label>
+            <input 
+              name="date"
+              type="date" 
+              required
+              defaultValue={new Date().toISOString().split('T')[0]}
+              className="w-full bg-slate-800 border border-slate-700 p-4 rounded-xl text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-bold"
+            />
+          </div>
+
+          <div>
             <label className="block text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">Valor do Lançamento</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-500">R$</span>
@@ -126,7 +149,6 @@ export function EntryActions() {
                 type="number" 
                 step="0.01" 
                 required
-                autoFocus
                 className="w-full bg-slate-800 border border-slate-700 pl-14 p-5 rounded-2xl text-4xl font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                 placeholder="0,00"
               />
