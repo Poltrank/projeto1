@@ -27,9 +27,9 @@ export function Modal({ isOpen, onClose, title, children, variant = 'default' }:
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-slate-900 rounded-t-[40px] p-8 pb-12 z-50 shadow-2xl max-w-lg mx-auto"
+            className="fixed bottom-0 left-0 right-0 bg-slate-900 rounded-t-[40px] z-50 shadow-2xl max-w-lg mx-auto max-h-[92vh] flex flex-col"
           >
-            <div className="flex justify-between items-center mb-8">
+            <div className="sticky top-0 bg-slate-900 px-8 pt-8 pb-4 z-10 flex justify-between items-center rounded-t-[40px]">
               <h3 className={ `text-2xl font-black uppercase tracking-tighter ${
                 variant === 'income' ? 'text-emerald-400' : 
                 variant === 'expense' ? 'text-rose-400' : 'text-white'
@@ -43,7 +43,9 @@ export function Modal({ isOpen, onClose, title, children, variant = 'default' }:
                 <X size={24} />
               </button>
             </div>
-            {children}
+            <div className="px-8 pb-12 overflow-y-auto">
+              {children}
+            </div>
           </motion.div>
         </>
       )}
