@@ -195,8 +195,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("Updating profile for UID:", user.uid, "Data:", data);
     try {
       const docRef = doc(db, 'users', user.uid);
+      
+      // Remove undefined values to prevent Firestore crashes
+      const sanitizedData = Object.entries(data).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as any);
+
       const updatedData = {
-        ...data,
+        ...sanitizedData,
         updatedAt: serverTimestamp(),
       };
       await setDoc(docRef, updatedData, { merge: true });
