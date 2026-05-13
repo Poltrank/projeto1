@@ -16,6 +16,10 @@
         "monthlyTires": { "type": "number", "description": "Occasional tire replacement cost for the month." },
         "monthlyMaintenance": { "type": "number", "description": "Occasional vehicle maintenance cost for the month." },
         "maintenanceMonth": { "type": "string", "description": "The month (YYYY-MM) the maintenance applies to." },
+        "annualIpva": { "type": "number", "description": "Annual IPVA cost." },
+        "annualLicensing": { "type": "number", "description": "Annual licensing cost." },
+        "ipvaYear": { "type": "string", "description": "The year (YYYY) the IPVA applies to." },
+        "licensingYear": { "type": "string", "description": "The year (YYYY) the licensing applies to." },
         "targetMonthlyNet": { "type": "number", "description": "User's target net income per month." },
         "targetDaysPerMonth": { "type": "number", "description": "Target number of working days per month." },
         "rankingOptIn": { "type": "boolean", "description": "Whether the user wants to be in the ranking." },
@@ -58,6 +62,10 @@
         "monthlyInsurance": { "type": "number" },
         "monthlyMaintenance": { "type": "number" },
         "maintenanceMonth": { "type": "string" },
+        "annualIpva": { "type": "number" },
+        "annualLicensing": { "type": "number" },
+        "ipvaYear": { "type": "string" },
+        "licensingYear": { "type": "string" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "nickname", "weeklyTotal"]

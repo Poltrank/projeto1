@@ -9,6 +9,13 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const now = new Date();
   const daysInCurrentMonth = getDaysInMonth(now);
 
+  const currentYearStr = now.getFullYear().toString();
+  const isLeap = (year: number) => (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+  const daysInYear = isLeap(now.getFullYear()) ? 366 : 365;
+
+  const ipvaDaily = (profile.ipvaYear === currentYearStr ? (profile.annualIpva || 0) : 0) / daysInYear;
+  const licensingDaily = (profile.licensingYear === currentYearStr ? (profile.annualLicensing || 0) : 0) / daysInYear;
+
   const insuranceDaily = (profile.monthlyInsurance || 0) / daysInCurrentMonth;
   const vehicleDaily = (profile.monthlyVehicleCost || 0) / daysInCurrentMonth;
   const internetDaily = (profile.monthlyInternet || 0) / daysInCurrentMonth;
@@ -16,7 +23,7 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const currentMonthKey = format(now, 'yyyy-MM');
   const maintenanceDaily = (profile.maintenanceMonth === currentMonthKey ? (profile.monthlyMaintenance || 0) : 0) / daysInCurrentMonth;
   const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / daysInCurrentMonth : 0;
-  const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
+  const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily + ipvaDaily + licensingDaily;
 
   const targetDailyNet = profile.targetMonthlyNet && profile.targetDaysPerMonth ? (profile.targetMonthlyNet / profile.targetDaysPerMonth) : 0;
   const targetDailyGross = targetDailyNet > 0 ? targetDailyNet + dailyFixedCost : 0;
@@ -186,7 +193,9 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
                 profile.monthlyInternet ? 'Internet' : null,
                 profile.monthlyTires ? 'Pneus' : null,
                 (profile.maintenanceMonth === currentMonthKey && profile.monthlyMaintenance) ? 'Revisão' : null,
-                profile.carType === 'Elétrico' && profile.lastElectricityBill ? 'Luz' : null
+                profile.carType === 'Elétrico' && profile.lastElectricityBill ? 'Luz' : null,
+                (profile.ipvaYear === currentYearStr && profile.annualIpva) ? 'IPVA' : null,
+                (profile.licensingYear === currentYearStr && profile.annualLicensing) ? 'Licenc.' : null
               ].filter(Boolean).join(' + ') || 'Nenhum'})
             </p>
           </div>

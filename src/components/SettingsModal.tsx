@@ -16,6 +16,8 @@ const profileSchema = z.object({
   monthlyInternet: z.number().min(0).optional(),
   monthlyTires: z.number().min(0).optional(),
   monthlyMaintenance: z.number().min(0).optional(),
+  annualIpva: z.number().min(0).optional(),
+  annualLicensing: z.number().min(0).optional(),
   lastElectricityBill: z.number().min(0).optional(),
   rankingOptIn: z.boolean(),
 });
@@ -46,6 +48,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       monthlyInternet: profile?.monthlyInternet || 0,
       monthlyTires: profile?.monthlyTires || 0,
       monthlyMaintenance: profile?.monthlyMaintenance || 0,
+      annualIpva: profile?.annualIpva || 0,
+      annualLicensing: profile?.annualLicensing || 0,
       lastElectricityBill: profile?.lastElectricityBill || 0,
       rankingOptIn: profile?.rankingOptIn ?? true,
     },
@@ -56,11 +60,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const onSubmit = async (data: ProfileValues) => {
     try {
       const currentMonthKey = new Date().toISOString().substring(0, 7);
+      const currentYear = new Date().getFullYear().toString();
       await updateProfile({
         ...profile,
         ...data,
         maintenanceMonth: (data.monthlyMaintenance && data.monthlyMaintenance > 0) 
           ? (profile?.monthlyMaintenance === data.monthlyMaintenance ? profile?.maintenanceMonth : currentMonthKey) 
+          : "",
+        ipvaYear: (data.annualIpva && data.annualIpva > 0)
+          ? (profile?.annualIpva === data.annualIpva ? profile?.ipvaYear : currentYear)
+          : "",
+        licensingYear: (data.annualLicensing && data.annualLicensing > 0)
+          ? (profile?.annualLicensing === data.annualLicensing ? profile?.licensingYear : currentYear)
           : "",
         updatedAt: new Date().toISOString(),
       });
@@ -175,6 +186,34 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {...register("monthlyMaintenance", { valueAsNumber: true })}
                   className="w-full bg-slate-800 border-amber-900/30 border pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                   placeholder="Custos mensais"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest pl-1">IPVA ANUAL (R$)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs uppercase">R$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  {...register("annualIpva", { valueAsNumber: true })}
+                  className="w-full bg-slate-800 border border-slate-700 pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                  placeholder="Dividido pelo ano"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest pl-1">Licenciamento (R$)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs uppercase">R$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  {...register("annualLicensing", { valueAsNumber: true })}
+                  className="w-full bg-slate-800 border border-slate-700 pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                  placeholder="Dividido pelo ano"
                 />
               </div>
             </div>

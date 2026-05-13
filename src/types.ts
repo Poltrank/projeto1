@@ -13,6 +13,10 @@ export interface UserProfile {
   monthlyTires?: number;
   monthlyMaintenance?: number;
   maintenanceMonth?: string;
+  annualIpva?: number;
+  annualLicensing?: number;
+  ipvaYear?: string;
+  licensingYear?: string;
   targetMonthlyNet?: number;
   targetDaysPerMonth?: number;
   topCategory?: string;
@@ -51,5 +55,9 @@ export interface RankingEntry {
   monthlyInsurance: number;
   monthlyMaintenance?: number;
   maintenanceMonth?: string;
+  annualIpva?: number;
+  annualLicensing?: number;
+  ipvaYear?: string;
+  licensingYear?: string;
   updatedAt: any;
 }
