@@ -19,7 +19,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
+import { ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, PiggyBank, PieChart as PieChartIcon, List as ListIcon } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -44,6 +44,7 @@ export function MonthlyHistory() {
   const [summaries, setSummaries] = useState<MonthSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'summary'>('list');
 
   useEffect(() => {
     async function loadData() {
@@ -131,10 +132,75 @@ export function MonthlyHistory() {
 
   return (
     <div className="p-6 space-y-6">
-      <header className="mb-8">
+      <header className="mb-2">
         <h2 className="text-3xl font-black text-slate-800 tracking-tighter uppercase italic">Histórico Mensal</h2>
         <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Seu desempenho mês a mês</p>
       </header>
+
+      {/* Annual Summary Card */}
+      <div className="bg-slate-900 rounded-[32px] p-6 border border-slate-800 shadow-xl overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <PieChartIcon size={16} className="text-emerald-500" />
+            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">RESUMO DO ANO {new Date().getFullYear()}</p>
+          </div>
+
+          {(() => {
+            const allExpenses = summaries.flatMap(s => s.transactions.filter(t => t.type === 'expense'));
+            const totalYearExpenses = allExpenses.reduce((acc, t) => acc + t.amount, 0) || 1;
+            const categoryMap: Record<string, number> = allExpenses.reduce((acc, t) => {
+              acc[t.category] = (acc[t.category] || 0) + t.amount;
+              return acc;
+            }, {} as Record<string, number>);
+            
+            const categories = (Object.entries(categoryMap) as [string, number][])
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5); // Top 5
+
+            if (categories.length === 0) {
+              return <p className="text-slate-500 text-xs font-bold uppercase italic">Sem gastos registrados no ano</p>;
+            }
+
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 mb-2">
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Total acumulado</p>
+                    <p className="text-2xl font-black text-white tabular-nums">
+                      {formatCurrency(allExpenses.reduce((acc, t) => acc + t.amount, 0))}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Média Mensal</p>
+                    <p className="text-xl font-black text-emerald-400 tabular-nums">
+                      {formatCurrency(allExpenses.reduce((acc, t) => acc + t.amount, 0) / (summaries.filter(s => s.income > 0 || s.expense > 0).length || 1))}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-white/5">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Maiores Gastos do Ano</p>
+                  {categories.map(([cat, amt]) => {
+                    const percent = (amt / totalYearExpenses) * 100;
+                    return (
+                      <div key={cat} className="space-y-1">
+                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-tight">
+                          <span className="text-slate-300">{cat}</span>
+                          <span className="text-white">{formatCurrency(amt)}</span>
+                        </div>
+                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
 
       {summaries.length === 0 && (
         <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
@@ -229,19 +295,86 @@ export function MonthlyHistory() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Detalhes do Mês</p>
-                       {summary.transactions.map((t) => (
-                         <div key={t.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                            <div>
-                               <p className="text-xs font-bold text-white uppercase tracking-tight">{t.category}</p>
-                               <p className="text-[9px] text-slate-500 font-bold uppercase">{format(parseISO(t.date), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
-                            </div>
-                            <p className={`text-sm font-black ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                               {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
-                            </p>
+                    <div className="space-y-4">
+                       <div className="flex items-center justify-between mb-2 px-1">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                            {viewMode === 'list' ? 'Detalhes do Mês' : 'Resumo de Gastos'}
+                          </p>
+                          <div className="flex bg-white/5 rounded-lg p-1 border border-white/5">
+                            <button 
+                              onClick={() => setViewMode('list')}
+                              className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-emerald-500 text-slate-950' : 'text-slate-500'}`}
+                            >
+                              <ListIcon size={14} />
+                            </button>
+                            <button 
+                              onClick={() => setViewMode('summary')}
+                              className={`p-1.5 rounded-md transition-all ${viewMode === 'summary' ? 'bg-emerald-500 text-slate-950' : 'text-slate-500'}`}
+                            >
+                              <PieChartIcon size={14} />
+                            </button>
+                          </div>
+                       </div>
+
+                       {viewMode === 'list' ? (
+                         <div className="space-y-2">
+                            {summary.transactions.map((t) => (
+                              <div key={t.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                                 <div>
+                                    <p className="text-xs font-bold text-white uppercase tracking-tight">{t.category}</p>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase">{format(parseISO(t.date), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
+                                 </div>
+                                 <p className={`text-sm font-black ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
+                                 </p>
+                              </div>
+                            ))}
                          </div>
-                       ))}
+                       ) : (
+                         <div className="space-y-4">
+                           {(() => {
+                             const expenses = summary.transactions.filter(t => t.type === 'expense');
+                             const totalExpenses = expenses.reduce((acc, t) => acc + t.amount, 0) || 1;
+                             const categoryMap: Record<string, number> = expenses.reduce((acc, t) => {
+                               acc[t.category] = (acc[t.category] || 0) + t.amount;
+                               return acc;
+                             }, {} as Record<string, number>);
+
+                             const categories = (Object.entries(categoryMap) as [string, number][])
+                               .sort((a, b) => b[1] - a[1]);
+
+                             if (categories.length === 0) {
+                               return (
+                                 <div className="py-8 text-center bg-white/5 rounded-2xl border border-white/5">
+                                   <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Sem gastos registrados</p>
+                                 </div>
+                               );
+                             }
+
+                             return categories.map(([cat, amt]) => {
+                               const percent = (amt / totalExpenses) * 100;
+                               return (
+                                 <div key={cat} className="space-y-1.5">
+                                   <div className="flex justify-between items-end px-1">
+                                     <p className="text-xs font-bold text-white uppercase tracking-tight">{cat}</p>
+                                     <div className="text-right">
+                                       <p className="text-xs font-black text-white">{formatCurrency(amt)}</p>
+                                       <p className="text-[9px] font-bold text-slate-500">{percent.toFixed(0)}%</p>
+                                     </div>
+                                   </div>
+                                   <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                     <motion.div 
+                                       initial={{ width: 0 }}
+                                       animate={{ width: `${percent}%` }}
+                                       className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                                     />
+                                   </div>
+                                 </div>
+                               );
+                             });
+                           })()}
+                         </div>
+                       )}
                     </div>
                   </motion.div>
                 )}

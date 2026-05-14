@@ -55,7 +55,7 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const missingDailyNet = Math.max(0, targetDailyNet - averageDailyNet);
 
   const monthlyGoal = profile.targetMonthlyNet || 0;
-  const progressPercentage = monthlyGoal > 0 ? Math.min(100, (netMonthly / monthlyGoal) * 100) : 0;
+  const progressPercentage = monthlyGoal > 0 ? (netMonthly / monthlyGoal) * 100 : 0;
 
   const getWeekRange = () => {
     const end = endOfWeek(now, { weekStartsOn: 1 });
@@ -128,7 +128,7 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
             <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner relative">
               <motion.div 
                 initial={{ width: 0 }}
-                animate={{ width: `${progressPercentage}%` }}
+                animate={{ width: `${Math.min(100, Math.max(0, progressPercentage))}%` }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 className={`h-full rounded-full shadow-lg ${
                   progressPercentage >= 100 ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-blue-600 shadow-blue-500/20'
@@ -137,9 +137,11 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
             </div>
 
             <p className="text-[10px] text-slate-400 mt-4 font-bold uppercase tracking-tight flex items-center justify-between">
-              <span>{progressPercentage >= 100 ? "Objetivo Alcançado! 🎯" : "Rumo ao seu salário desejado"}</span>
-              {progressPercentage < 100 && (
-                <span className="text-slate-500">Falta {formatCurrency(profile.targetMonthlyNet - netMonthly)}</span>
+              <span>{progressPercentage >= 100 ? "Meta Superada! 🚀" : "Rumo ao seu salário desejado"}</span>
+              {progressPercentage < 100 ? (
+                <span className="text-slate-500">Falta {formatCurrency((profile.targetMonthlyNet || 0) - netMonthly)}</span>
+              ) : (
+                <span className="text-emerald-500 font-black tracking-tight">Extra {formatCurrency(netMonthly - (profile.targetMonthlyNet || 0))}</span>
               )}
             </p>
           </motion.div>
