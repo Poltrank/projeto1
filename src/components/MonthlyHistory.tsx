@@ -15,11 +15,12 @@ import {
   isBefore,
   isAfter,
   startOfDay,
-  getDaysInMonth
+  getDaysInMonth,
+  isSameDay
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, PiggyBank, PieChart as PieChartIcon, List as ListIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, PiggyBank, PieChart as PieChartIcon, List as ListIcon, Activity } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -35,6 +36,7 @@ interface MonthSummary {
   income: number;
   expense: number;
   fixedCost: number;
+  dailyFixedCost: number;
   net: number;
   transactions: Transaction[];
 }
@@ -44,7 +46,7 @@ export function MonthlyHistory() {
   const [summaries, setSummaries] = useState<MonthSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'summary'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'summary' | 'daily'>('list');
 
   useEffect(() => {
     async function loadData() {
@@ -106,6 +108,7 @@ export function MonthlyHistory() {
             income,
             expense,
             fixedCost,
+            dailyFixedCost,
             net,
             transactions: mTransactions
           };
@@ -298,18 +301,27 @@ export function MonthlyHistory() {
                     <div className="space-y-4">
                        <div className="flex items-center justify-between mb-2 px-1">
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                            {viewMode === 'list' ? 'Detalhes do Mês' : 'Resumo de Gastos'}
+                            {viewMode === 'list' ? 'Detalhes do Mês' : viewMode === 'summary' ? 'Resumo de Gastos' : 'Melhores Dias'}
                           </p>
-                          <div className="flex bg-white/5 rounded-lg p-1 border border-white/5">
+                          <div className="flex bg-white/5 rounded-lg p-1 border border-white/5 gap-1">
                             <button 
                               onClick={() => setViewMode('list')}
                               className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-emerald-500 text-slate-950' : 'text-slate-500'}`}
+                              title="Lista de Transações"
                             >
                               <ListIcon size={14} />
                             </button>
                             <button 
+                              onClick={() => setViewMode('daily')}
+                              className={`p-1.5 rounded-md transition-all ${viewMode === 'daily' ? 'bg-emerald-500 text-slate-950' : 'text-slate-500'}`}
+                              title="Desempenho Diário"
+                            >
+                              <Activity size={14} />
+                            </button>
+                            <button 
                               onClick={() => setViewMode('summary')}
                               className={`p-1.5 rounded-md transition-all ${viewMode === 'summary' ? 'bg-emerald-500 text-slate-950' : 'text-slate-500'}`}
+                              title="Gastos por Categoria"
                             >
                               <PieChartIcon size={14} />
                             </button>
@@ -329,6 +341,59 @@ export function MonthlyHistory() {
                                  </p>
                               </div>
                             ))}
+                         </div>
+                       ) : viewMode === 'daily' ? (
+                         <div className="space-y-2">
+                           {(() => {
+                             const daysWithActivity = new Map<string, { income: number; expense: number; date: Date }>();
+                             
+                             summary.transactions.forEach(t => {
+                               const dateKey = format(parseISO(t.date), 'yyyy-MM-dd');
+                               const existing = daysWithActivity.get(dateKey) || { income: 0, expense: 0, date: parseISO(t.date) };
+                               if (t.type === 'income') existing.income += t.amount;
+                               else existing.expense += t.amount;
+                               daysWithActivity.set(dateKey, existing);
+                             });
+
+                             const dailyStats = Array.from(daysWithActivity.values())
+                               .map(day => ({
+                                 ...day,
+                                 net: day.income - day.expense - summary.dailyFixedCost
+                               }))
+                               .sort((a, b) => b.net - a.net);
+
+                             if (dailyStats.length === 0) {
+                               return (
+                                 <div className="py-8 text-center bg-white/5 rounded-2xl border border-white/5">
+                                   <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Sem lançamentos diários</p>
+                                 </div>
+                               );
+                             }
+
+                             return dailyStats.map((day, idx) => (
+                               <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 relative overflow-hidden group">
+                                  {idx === 0 && day.net > 0 && (
+                                    <div className="absolute top-0 right-0 bg-emerald-500/10 px-2 py-1 rounded-bl-lg">
+                                       <p className="text-[7px] font-black text-emerald-400 uppercase tracking-tighter">Melhor Dia 🎯</p>
+                                    </div>
+                                  )}
+                                  <div>
+                                     <p className="text-xs font-bold text-white uppercase tracking-tight">
+                                       {format(day.date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                                     </p>
+                                     <div className="flex items-center gap-2 mt-0.5">
+                                       <span className="text-[9px] text-emerald-400/70 font-bold">+{formatCurrency(day.income)}</span>
+                                       <span className="text-[9px] text-rose-400/70 font-bold">-{formatCurrency(day.expense)}</span>
+                                     </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className={`text-sm font-black ${day.net > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
+                                       {formatCurrency(day.net)}
+                                    </p>
+                                  </div>
+                               </div>
+                             ));
+                           })()}
                          </div>
                        ) : (
                          <div className="space-y-4">
