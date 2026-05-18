@@ -16,11 +16,16 @@ import {
   isAfter,
   startOfDay,
   getDaysInMonth,
-  isSameDay
+  isSameDay,
+  startOfWeek,
+  endOfWeek,
+  eachWeekOfInterval,
+  max,
+  min
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, PiggyBank, PieChart as PieChartIcon, List as ListIcon, Activity } from "lucide-react";
+import { ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, PiggyBank, PieChart as PieChartIcon, List as ListIcon, Activity, CalendarDays } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -46,7 +51,7 @@ export function MonthlyHistory() {
   const [summaries, setSummaries] = useState<MonthSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'summary' | 'daily'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'summary' | 'daily' | 'weekly'>('list');
 
   useEffect(() => {
     async function loadData() {
@@ -301,7 +306,10 @@ export function MonthlyHistory() {
                     <div className="space-y-4">
                        <div className="flex items-center justify-between mb-2 px-1">
                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                            {viewMode === 'list' ? 'Detalhes do Mês' : viewMode === 'summary' ? 'Resumo de Gastos' : 'Melhores Dias'}
+                            {viewMode === 'list' ? 'Detalhes do Mês' : 
+                             viewMode === 'summary' ? 'Resumo de Gastos' : 
+                             viewMode === 'daily' ? 'Melhores Dias' : 
+                             'Resumo Semanal'}
                           </p>
                           <div className="flex bg-white/5 rounded-lg p-1 border border-white/5 gap-1">
                             <button 
@@ -310,6 +318,13 @@ export function MonthlyHistory() {
                               title="Lista de Transações"
                             >
                               <ListIcon size={14} />
+                            </button>
+                            <button 
+                              onClick={() => setViewMode('weekly')}
+                              className={`p-1.5 rounded-md transition-all ${viewMode === 'weekly' ? 'bg-emerald-500 text-slate-950' : 'text-slate-500'}`}
+                              title="Resumo Semanal"
+                            >
+                              <CalendarDays size={14} />
                             </button>
                             <button 
                               onClick={() => setViewMode('daily')}
@@ -389,6 +404,51 @@ export function MonthlyHistory() {
                                   <div className="text-right">
                                     <p className={`text-sm font-black ${day.net > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
                                        {formatCurrency(day.net)}
+                                    </p>
+                                  </div>
+                               </div>
+                             ));
+                           })()}
+                         </div>
+                       ) : viewMode === 'weekly' ? (
+                         <div className="space-y-2">
+                           {(() => {
+                             const mStart = startOfMonth(summary.month);
+                             const mEnd = endOfMonth(summary.month);
+                             
+                             const weeks = eachWeekOfInterval({ start: mStart, end: mEnd }, { weekStartsOn: 1 });
+                             
+                             const weeklyStats = weeks.map(weekStart => {
+                               const wEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+                               const effectiveStart = max([weekStart, mStart]);
+                               const effectiveEnd = min([wEnd, mEnd]);
+                               
+                               const weekIncome = summary.transactions
+                                 .filter(t => {
+                                   const tDate = parseISO(t.date);
+                                   return t.type === 'income' && (tDate >= effectiveStart && tDate <= effectiveEnd);
+                                 })
+                                 .reduce((acc, t) => acc + t.amount, 0);
+                                 
+                               return {
+                                 start: effectiveStart,
+                                 end: effectiveEnd,
+                                 income: weekIncome
+                               };
+                             }).filter(w => w.income > 0 || isSameMonth(w.start, summary.month));
+
+                             return weeklyStats.map((week, idx) => (
+                               <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group">
+                                  <div>
+                                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-0.5">Semana {idx + 1}</p>
+                                     <p className="text-xs font-bold text-white uppercase tracking-tight">
+                                       {format(week.start, "dd", { locale: ptBR })} a {format(week.end, "dd 'de' MMMM", { locale: ptBR })}
+                                     </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase mb-0.5">Bruto Total</p>
+                                    <p className="text-sm font-black text-emerald-400">
+                                       {formatCurrency(week.income)}
                                     </p>
                                   </div>
                                </div>
