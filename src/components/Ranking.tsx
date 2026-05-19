@@ -34,19 +34,27 @@ export function Ranking() {
       const startOfCurrentMonth = startOfMonth(new Date());
 
       data.forEach(async (entry) => {
-        let entryDate = new Date();
+        let entryDate: Date | null = null;
         if (entry.updatedAt) {
           if (typeof entry.updatedAt.toDate === 'function') {
             entryDate = entry.updatedAt.toDate();
-          } else if (entry.updatedAt.seconds) {
+          } else if (entry.updatedAt.seconds !== undefined) {
             entryDate = new Date(entry.updatedAt.seconds * 1000);
+          } else if (entry.updatedAt._seconds !== undefined) {
+            entryDate = new Date(entry.updatedAt._seconds * 1000);
           } else {
-            entryDate = new Date(entry.updatedAt);
+            const parsed = new Date(entry.updatedAt);
+            if (!isNaN(parsed.getTime())) {
+              entryDate = parsed;
+            }
           }
         }
 
-        const isWeeklyStale = entryDate < startOfCurrentWeek;
-        const isMonthlyStale = entryDate < startOfCurrentMonth;
+        // If updatedAt is missing or invalid, default to epoch (1970) so it's treated as stale
+        const resolvedDate = entryDate || new Date(0);
+
+        const isWeeklyStale = resolvedDate < startOfCurrentWeek;
+        const isMonthlyStale = resolvedDate < startOfCurrentMonth;
 
         if (isMonthlyStale && (entry.monthlyGross > 0 || entry.monthlyTotal > 0 || entry.weeklyGross > 0 || entry.weeklyTotal > 0)) {
           try {
