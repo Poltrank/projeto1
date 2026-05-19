@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { RankingEntry } from "../types";
 import { formatCurrency } from "../lib/utils";
 import { Trophy, Zap, Trash2, Calendar, RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuth } from "../contexts/AuthContext";
-import { format, startOfWeek, endOfWeek, differenceInDays } from "date-fns";
+import { format, startOfWeek, endOfWeek, differenceInDays, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function Ranking() {
@@ -27,6 +27,57 @@ export function Ranking() {
     return onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => doc.data() as RankingEntry);
       setEntries(data);
+      setLoading(false);
+
+      // Self-heal stale documents returned in the ranked list
+      const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
+      const startOfCurrentMonth = startOfMonth(new Date());
+
+      data.forEach(async (entry) => {
+        let entryDate = new Date();
+        if (entry.updatedAt) {
+          if (typeof entry.updatedAt.toDate === 'function') {
+            entryDate = entry.updatedAt.toDate();
+          } else if (entry.updatedAt.seconds) {
+            entryDate = new Date(entry.updatedAt.seconds * 1000);
+          } else {
+            entryDate = new Date(entry.updatedAt);
+          }
+        }
+
+        const isWeeklyStale = entryDate < startOfCurrentWeek;
+        const isMonthlyStale = entryDate < startOfCurrentMonth;
+
+        if (isMonthlyStale && (entry.monthlyGross > 0 || entry.monthlyTotal > 0 || entry.weeklyGross > 0 || entry.weeklyTotal > 0)) {
+          try {
+            const docRef = doc(db, "ranking", entry.userId);
+            await updateDoc(docRef, {
+              monthlyGross: 0,
+              monthlyTotal: 0,
+              weeklyGross: 0,
+              weeklyTotal: 0,
+              updatedAt: serverTimestamp()
+            });
+            console.log(`Auto-reset stale month for ranking entry ${entry.userId} (${entry.nickname})`);
+          } catch (err) {
+            console.error("Error updating stale monthly ranking entry:", err);
+          }
+        } else if (isWeeklyStale && (entry.weeklyGross > 0 || entry.weeklyTotal > 0)) {
+          try {
+            const docRef = doc(db, "ranking", entry.userId);
+            await updateDoc(docRef, {
+              weeklyGross: 0,
+              weeklyTotal: 0,
+              updatedAt: serverTimestamp()
+            });
+            console.log(`Auto-reset stale week for ranking entry ${entry.userId} (${entry.nickname})`);
+          } catch (err) {
+            console.error("Error updating stale weekly ranking entry:", err);
+          }
+        }
+      });
+    }, (error) => {
+      console.error("Error listening to ranking collection:", error);
       setLoading(false);
     });
   }, [view]);

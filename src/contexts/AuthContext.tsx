@@ -3,6 +3,7 @@ import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut 
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { UserProfile } from '../types';
+import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO, format } from "date-fns";
 
 interface AuthContextType {
   user: User | null;
@@ -16,6 +17,7 @@ interface AuthContextType {
   resetProfile: () => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
   clearUserHistory: (userId: string) => Promise<void>;
+  recalculateTotals: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,6 +37,148 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return `${clean.replace(/\D/g, '')}@motoristapro.com`;
   };
 
+  const syncAndRecalculateTotals = async (userId: string, currentProfile: UserProfile) => {
+    try {
+      const { collection, getDocs } = await import('firebase/firestore');
+      const transRef = collection(db, 'users', userId, 'transactions');
+      const snap = await getDocs(transRef);
+      
+      const transactionsList: { type: string; category: string; amount: number; date: string }[] = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        transactionsList.push({
+          type: data.type || 'income',
+          category: data.category || '',
+          amount: Number(data.amount) || 0,
+          date: data.date || ''
+        });
+      });
+
+      const now = new Date();
+      const startOfW = startOfWeek(now, { weekStartsOn: 1 });
+      const endOfW = endOfWeek(now, { weekStartsOn: 1 });
+      const currentMonthKey = format(now, 'yyyy-MM');
+      const currentYearStr = now.getFullYear().toString();
+
+      let weeklyTotal = 0;
+      let weeklyGross = 0;
+      let monthlyTotal = 0;
+      let monthlyGross = 0;
+      let annualTotal = 0;
+      const categoryTotals: Record<string, number> = {};
+      let monthlyMaintenance = 0;
+
+      transactionsList.forEach(t => {
+        if (!t.date) return;
+        const entryDate = parseISO(t.date);
+        const amount = t.amount;
+        const diff = t.type === 'income' ? amount : -amount;
+        
+        // Year check
+        if (format(entryDate, 'yyyy') === currentYearStr) {
+          annualTotal += diff;
+        }
+
+        // Month check
+        if (format(entryDate, 'yyyy-MM') === currentMonthKey) {
+          monthlyTotal += diff;
+          if (t.type === 'income') {
+            monthlyGross += amount;
+            if (t.category) {
+              categoryTotals[t.category] = (categoryTotals[t.category] || 0) + amount;
+            }
+          }
+          if (t.type === 'expense' && t.category === 'Manutenção') {
+            monthlyMaintenance += amount;
+          }
+        }
+
+        // Week check
+        const isCurrentWeek = isWithinInterval(entryDate, {
+          start: startOfW,
+          end: endOfW
+        });
+        if (isCurrentWeek) {
+          weeklyTotal += diff;
+          if (t.type === 'income') {
+            weeklyGross += amount;
+          }
+        }
+      });
+
+      // Find top category
+      let topCat = "";
+      let maxAmount = 0;
+      Object.entries(categoryTotals).forEach(([cat, amt]) => {
+        if (amt > maxAmount) {
+          maxAmount = amt;
+          topCat = cat;
+        }
+      });
+
+      // Check if any value is different from the current profile
+      const needsUpdate = 
+        weeklyTotal !== (currentProfile.weeklyTotal || 0) ||
+        weeklyGross !== (currentProfile.weeklyGross || 0) ||
+        monthlyTotal !== (currentProfile.monthlyTotal || 0) ||
+        monthlyGross !== (currentProfile.monthlyGross || 0) ||
+        annualTotal !== (currentProfile.annualTotal || 0) ||
+        topCat !== (currentProfile.topCategory || '') ||
+        monthlyMaintenance !== (currentProfile.monthlyMaintenance || 0) ||
+        currentProfile.maintenanceMonth !== currentMonthKey;
+
+      if (needsUpdate) {
+        console.log("Recalculating and upgrading profile totals due to changes or rollover:", {
+          weeklyGross, monthlyGross, topCat
+        });
+        
+        const changes = {
+          weeklyTotal,
+          weeklyGross,
+          monthlyTotal,
+          monthlyGross,
+          annualTotal,
+          topCategory: topCat,
+          monthlyMaintenance,
+          maintenanceMonth: currentMonthKey
+        };
+
+        const docRef = doc(db, 'users', userId);
+        const updatedData = {
+          ...changes,
+          updatedAt: serverTimestamp(),
+        };
+        await setDoc(docRef, updatedData, { merge: true });
+        
+        // Refresh local profile state
+        setProfile(prev => prev ? { ...prev, ...changes } : null);
+
+        // Update ranking if opted in
+        if (currentProfile.rankingOptIn) {
+          const rankingRef = doc(db, 'ranking', userId);
+          await setDoc(rankingRef, {
+            weeklyTotal,
+            weeklyGross,
+            monthlyTotal,
+            monthlyGross,
+            annualTotal,
+            topCategory: topCat,
+            monthlyMaintenance,
+            maintenanceMonth: currentMonthKey,
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+        }
+      }
+    } catch (error) {
+      console.error("Error syncing and recalculating user totals:", error);
+    }
+  };
+
+  const recalculateTotals = async () => {
+    if (!user || !profile) return;
+    await syncAndRecalculateTotals(user.uid, profile);
+  };
+
   useEffect(() => {
     return onAuthStateChanged(auth, async (user) => {
       setUser(user);
@@ -48,7 +192,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setProfile({ uid: user.uid, ...docSnap.data() } as UserProfile);
+          const profileData = { uid: user.uid, ...docSnap.data() } as UserProfile;
+          setProfile(profileData);
+          // Auto sync/recalculate totals on session load/restoration
+          await syncAndRecalculateTotals(user.uid, profileData);
         } else {
           setProfile(null);
         }
@@ -261,7 +408,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signUpPhone, signInPhone, logout, updateProfile, resetProfile, deleteUser, clearUserHistory }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signUpPhone, signInPhone, logout, updateProfile, resetProfile, deleteUser, clearUserHistory, recalculateTotals }}>
       {children}
     </AuthContext.Provider>
   );

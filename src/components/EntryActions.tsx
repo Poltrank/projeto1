@@ -2,14 +2,13 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Modal } from "./Modal";
 import { db } from "../lib/firebase";
-import { collection, addDoc, serverTimestamp, getDocs, query, where } from "firebase/firestore";
-import { startOfWeek, endOfWeek, isWithinInterval, parseISO, startOfMonth, format } from "date-fns";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const EXPENSE_CATEGORIES = ["Alimentação", "Combustível", "Manutenção", "Outros"];
 const INCOME_CATEGORIES = ["99", "Uber", "Muvi", "Zopp", "Indriver", "Particular"];
 
 export function EntryActions() {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, recalculateTotals } = useAuth();
   const [modalType, setModalType] = useState<'income' | 'expense' | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,9 +23,6 @@ export function EntryActions() {
     const dateStr = formData.get('date') as string;
     const type = modalType!;
 
-    const now = new Date();
-    const entryDate = parseISO(dateStr);
-    
     try {
       // 1. Save Transaction
       const transRef = collection(db, 'users', user.uid, 'transactions');
@@ -39,60 +35,8 @@ export function EntryActions() {
         createdAt: serverTimestamp(),
       });
 
-      // 2. Calculate Top Category for the current month
-      let topCat = profile.topCategory || "";
-      const currentMonthStart = startOfMonth(now);
-      const isCurrentMonth = format(entryDate, 'yyyy-MM') === format(now, 'yyyy-MM');
-
-      if (type === 'income' && isCurrentMonth) {
-        const q = query(
-          transRef, 
-          where('type', '==', 'income')
-        );
-        const snap = await getDocs(q);
-        const categoryTotals: {[key: string]: number} = {};
-        const currentMonthStartStr = currentMonthStart.toISOString();
-
-        snap.forEach(doc => {
-          const t = doc.data();
-          if (t.category && t.date >= currentMonthStartStr) {
-            categoryTotals[t.category] = (categoryTotals[t.category] || 0) + (t.amount || 0);
-          }
-        });
-        
-        let maxAmount = 0;
-        Object.entries(categoryTotals).forEach(([cat, amt]) => {
-          if (amt > maxAmount) {
-            maxAmount = amt;
-            topCat = cat;
-          }
-        });
-      }
-
-      // 3. Simple update logic (for MVP, normally we'd sum all transactions)
-      const diff = type === 'income' ? amount : -amount;
-      const incomeDiff = type === 'income' ? amount : 0;
-      
-      const currentMonthKey = format(now, 'yyyy-MM');
-      const isMaintenance = type === 'expense' && category === 'Manutenção';
-      
-      const isCurrentWeek = isWithinInterval(entryDate, {
-        start: startOfWeek(now, { weekStartsOn: 1 }),
-        end: endOfWeek(now, { weekStartsOn: 1 })
-      });
-
-      await updateProfile({
-        weeklyTotal: isCurrentWeek ? (profile.weeklyTotal || 0) + diff : (profile.weeklyTotal || 0),
-        monthlyTotal: isCurrentMonth ? (profile.monthlyTotal || 0) + diff : (profile.monthlyTotal || 0),
-        annualTotal: (format(entryDate, 'yyyy') === format(now, 'yyyy')) ? (profile.annualTotal || 0) + diff : (profile.annualTotal || 0),
-        weeklyGross: isCurrentWeek ? (profile.weeklyGross || 0) + incomeDiff : (profile.weeklyGross || 0),
-        monthlyGross: isCurrentMonth ? (profile.monthlyGross || 0) + incomeDiff : (profile.monthlyGross || 0),
-        topCategory: topCat,
-        ...(isMaintenance && isCurrentMonth ? {
-          monthlyMaintenance: (profile.maintenanceMonth === currentMonthKey ? (profile.monthlyMaintenance || 0) : 0) + amount,
-          maintenanceMonth: currentMonthKey
-        } : {})
-      });
+      // 2. Recalculate all profile/ranking totals dynamically based on absolute database status
+      await recalculateTotals();
 
       setModalType(null);
     } catch (error) {
