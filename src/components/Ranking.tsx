@@ -13,14 +13,12 @@ export function Ranking() {
   const { user, isAdmin, deleteUser, clearUserHistory } = useAuth();
   const [entries, setEntries] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'weekly' | 'monthly'>('weekly');
 
   useEffect(() => {
     setLoading(true);
-    const orderField = view === 'weekly' ? 'weeklyGross' : 'monthlyGross';
     const q = query(
       collection(db, "ranking"),
-      orderBy(orderField, "desc"),
+      orderBy("monthlyGross", "desc"),
       limit(20)
     );
 
@@ -30,7 +28,6 @@ export function Ranking() {
       setLoading(false);
 
       // Self-heal stale documents returned in the ranked list
-      const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
       const startOfCurrentMonth = startOfMonth(new Date());
 
       data.forEach(async (entry) => {
@@ -52,8 +49,6 @@ export function Ranking() {
 
         // If updatedAt is missing or invalid, default to epoch (1970) so it's treated as stale
         const resolvedDate = entryDate || new Date(0);
-
-        const isWeeklyStale = resolvedDate < startOfCurrentWeek;
         const isMonthlyStale = resolvedDate < startOfCurrentMonth;
 
         if (isMonthlyStale && (entry.monthlyGross > 0 || entry.monthlyTotal > 0 || entry.weeklyGross > 0 || entry.weeklyTotal > 0)) {
@@ -70,33 +65,13 @@ export function Ranking() {
           } catch (err) {
             console.error("Error updating stale monthly ranking entry:", err);
           }
-        } else if (isWeeklyStale && (entry.weeklyGross > 0 || entry.weeklyTotal > 0)) {
-          try {
-            const docRef = doc(db, "ranking", entry.userId);
-            await updateDoc(docRef, {
-              weeklyGross: 0,
-              weeklyTotal: 0,
-              updatedAt: serverTimestamp()
-            });
-            console.log(`Auto-reset stale week for ranking entry ${entry.userId} (${entry.nickname})`);
-          } catch (err) {
-            console.error("Error updating stale weekly ranking entry:", err);
-          }
         }
       });
     }, (error) => {
       console.error("Error listening to ranking collection:", error);
       setLoading(false);
     });
-  }, [view]);
-
-  const getWeekRange = () => {
-    const now = new Date();
-    const start = startOfWeek(now, { weekStartsOn: 1 });
-    const end = endOfWeek(now, { weekStartsOn: 1 });
-    
-    return `${format(start, "dd")} a ${format(end, "dd")} de ${format(now, "MMMM", { locale: ptBR })}`;
-  };
+  }, []);
 
   const getMonthName = () => {
     return format(new Date(), "MMMM", { locale: ptBR });
@@ -110,30 +85,12 @@ export function Ranking() {
             <Trophy className="text-emerald-500" size={24} />
             Ranking Local
           </h3>
-          <div className="flex bg-slate-100 p-1 rounded-xl">
-            <button 
-              onClick={() => setView('weekly')}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                view === 'weekly' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'
-              }`}
-            >
-              Semanal
-            </button>
-            <button 
-              onClick={() => setView('monthly')}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                view === 'monthly' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'
-              }`}
-            >
-              Mensal
-            </button>
-          </div>
         </div>
 
         <div className="flex items-center gap-2 text-slate-400 bg-slate-50 p-3 rounded-2xl border border-slate-100">
           <Calendar size={14} className="text-emerald-500" />
           <span className="text-[10px] font-black uppercase tracking-widest leading-none">
-            {view === 'weekly' ? `Semana (Faturamento Bruto): ${getWeekRange()}` : `Mês (Faturamento Bruto): ${getMonthName()}`}
+            Mês (Faturamento Bruto): {getMonthName()}
           </span>
         </div>
       </div>
@@ -187,7 +144,7 @@ export function Ranking() {
             </div>
             <div className="flex items-center gap-2">
               <span className="font-black text-emerald-600 text-lg tabular-nums">
-                {formatCurrency(view === 'weekly' ? (entry.weeklyGross || 0) : (entry.monthlyGross || 0))}
+                {formatCurrency(entry.monthlyGross || 0)}
               </span>
               {isAdmin && (
                 <div className="flex items-center gap-1 border-l border-slate-200 ml-2 pl-2">

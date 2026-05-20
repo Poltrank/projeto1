@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return `${clean.replace(/\D/g, '')}@motoristapro.com`;
   };
 
-  const syncAndRecalculateTotals = async (userId: string, currentProfile: UserProfile) => {
+  const syncAndRecalculateTotals = async (userId: string, currentProfile: UserProfile, force = false) => {
     try {
       const { collection, getDocs } = await import('firebase/firestore');
       const transRef = collection(db, 'users', userId, 'transactions');
@@ -118,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Check if any value is different from the current profile
       const needsUpdate = 
+        force ||
         weeklyTotal !== (currentProfile.weeklyTotal || 0) ||
         weeklyGross !== (currentProfile.weeklyGross || 0) ||
         monthlyTotal !== (currentProfile.monthlyTotal || 0) ||
@@ -157,6 +158,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentProfile.rankingOptIn) {
           const rankingRef = doc(db, 'ranking', userId);
           await setDoc(rankingRef, {
+            userId,
+            nickname: currentProfile.nickname || '',
+            car: currentProfile.car || '',
+            carType: currentProfile.carType || 'Combustão',
             weeklyTotal,
             weeklyGross,
             monthlyTotal,
@@ -176,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const recalculateTotals = async () => {
     if (!user || !profile) return;
-    await syncAndRecalculateTotals(user.uid, profile);
+    await syncAndRecalculateTotals(user.uid, profile, true);
   };
 
   useEffect(() => {
@@ -195,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const profileData = { uid: user.uid, ...docSnap.data() } as UserProfile;
           setProfile(profileData);
           // Auto sync/recalculate totals on session load/restoration
-          await syncAndRecalculateTotals(user.uid, profileData);
+          await syncAndRecalculateTotals(user.uid, profileData, true);
         } else {
           setProfile(null);
         }
