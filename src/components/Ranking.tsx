@@ -47,9 +47,13 @@ export function Ranking() {
           }
         }
 
-        // If updatedAt is missing or invalid, default to epoch (1970) so it's treated as stale
-        const resolvedDate = entryDate || new Date(0);
-        const isMonthlyStale = resolvedDate < startOfCurrentMonth;
+        // If updatedAt is missing or invalid (e.g. pending server write / latency compensation),
+        // we MUST NOT treat it as stale. Returning here prevents wiping active records.
+        if (!entryDate) {
+          return;
+        }
+
+        const isMonthlyStale = entryDate < startOfCurrentMonth;
 
         if (isMonthlyStale && (entry.monthlyGross > 0 || entry.monthlyTotal > 0 || entry.weeklyGross > 0 || entry.weeklyTotal > 0)) {
           try {
