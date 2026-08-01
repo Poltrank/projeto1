@@ -11,8 +11,12 @@ export interface UserProfile {
   monthlyVehicleCost?: number;
   monthlyInternet?: number;
   monthlyTires?: number;
+  tiresDate?: string;
   monthlyMaintenance?: number;
+  maintenanceDate?: string;
   maintenanceMonth?: string;
+  monthlyOilChange?: number;
+  oilChangeDate?: string;
   annualIpva?: number;
   annualLicensing?: number;
   ipvaYear?: string;
@@ -53,8 +57,13 @@ export interface RankingEntry {
   monthlyGross: number;
   topCategory?: string;
   monthlyInsurance: number;
+  monthlyTires?: number;
+  tiresDate?: string;
   monthlyMaintenance?: number;
+  maintenanceDate?: string;
   maintenanceMonth?: string;
+  monthlyOilChange?: number;
+  oilChangeDate?: string;
   annualIpva?: number;
   annualLicensing?: number;
   ipvaYear?: string;
