@@ -43,7 +43,25 @@ function AppContent() {
         await signInPhone(cleanPhone, password);
       } else {
         if (isAdmLogin) throw new Error("Ação não permitida para este usuário");
-        await signUpPhone(cleanPhone, password);
+        try {
+          await signUpPhone(cleanPhone, password);
+        } catch (signUpErr: any) {
+          // Se o usuário já existe no Firebase Auth (ex: foi removido pelo ADM no Ranking/Firestore para recadastrar),
+          // tentamos logar automaticamente com a senha informada
+          if (signUpErr.code === 'auth/email-already-in-use') {
+            try {
+              await signInPhone(cleanPhone, password);
+              return;
+            } catch (signInErr: any) {
+              if (signInErr.code === 'auth/wrong-password' || signInErr.code === 'auth/invalid-credential') {
+                setAuthError("Este número já possui cadastro! Para recadastrar, digite sua SENHA ORIGINAL. (Se esqueceu a senha original, cadastre colocando o número 0 na frente do DDD, ex: 047...).");
+                return;
+              }
+              throw signUpErr;
+            }
+          }
+          throw signUpErr;
+        }
       }
     } catch (error: any) {
       console.error("Auth Error Code:", error.code);
@@ -51,7 +69,7 @@ function AppContent() {
         setAuthError("Usuário ou senha incorretos. Verifique os dados e tente novamente.");
       }
       else if (error.code === 'auth/wrong-password') setAuthError("Senha incorreta. Tente novamente.");
-      else if (error.code === 'auth/email-already-in-use') setAuthError("Este acesso já está cadastrado.");
+      else if (error.code === 'auth/email-already-in-use') setAuthError("Este acesso já está cadastrado. Digite sua senha original ou faça login.");
       else if (error.code === 'auth/operation-not-allowed') setAuthError("O login por senha ainda não foi habilitado no Firebase.");
       else if (error.code === 'auth/invalid-email') setAuthError("O formato do identificador é inválido.");
       else setAuthError("Erro na autenticação: " + (error.message || "Dados inválidos"));
@@ -141,6 +159,10 @@ function AppContent() {
           >
             {authMode === 'login' ? 'Não tem conta? Criar conta' : 'Já tenho conta. Fazer Login'}
           </button>
+
+          <p className="text-slate-500 text-[11px] font-medium mt-3 leading-relaxed">
+            💡 <strong className="text-slate-400">Motorista recadastrando?</strong> Use sua senha original (mesmo em "Criar conta") ou faça login normalmente.
+          </p>
         </form>
 
         <div className="mt-8 flex flex-col items-center gap-4 w-full max-w-sm">

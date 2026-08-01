@@ -25,7 +25,8 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, PiggyBank, PieChart as PieChartIcon, List as ListIcon, Activity, CalendarDays } from "lucide-react";
+import { ChevronDown, ChevronUp, Calendar, TrendingUp, TrendingDown, PiggyBank, PieChart as PieChartIcon, List as ListIcon, Activity, CalendarDays, Pencil } from "lucide-react";
+import { EditTransactionModal } from "./EditTransactionModal";
 
 interface Transaction {
   id: string;
@@ -52,10 +53,10 @@ export function MonthlyHistory() {
   const [loading, setLoading] = useState(true);
   const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'summary' | 'daily' | 'weekly'>('list');
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!user || !profile) return;
+  const loadData = async () => {
+    if (!user || !profile) return;
       
       try {
         const transRef = collection(db, 'users', user.uid, 'transactions');
@@ -125,8 +126,9 @@ export function MonthlyHistory() {
       } finally {
         setLoading(false);
       }
-    }
+  };
 
+  useEffect(() => {
     loadData();
   }, [user, profile]);
 
@@ -346,14 +348,31 @@ export function MonthlyHistory() {
                        {viewMode === 'list' ? (
                          <div className="space-y-2">
                             {summary.transactions.map((t) => (
-                              <div key={t.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                              <div
+                                key={t.id}
+                                onClick={() => setEditingTransaction(t)}
+                                className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 cursor-pointer group transition-all"
+                              >
                                  <div>
-                                    <p className="text-xs font-bold text-white uppercase tracking-tight">{t.category}</p>
+                                    <p className="text-xs font-bold text-white uppercase tracking-tight group-hover:text-emerald-400 transition-colors">{t.category}</p>
                                     <p className="text-[9px] text-slate-500 font-bold uppercase">{format(parseISO(t.date), "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
                                  </div>
-                                 <p className={`text-sm font-black ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
-                                 </p>
+                                 <div className="flex items-center gap-3">
+                                   <p className={`text-sm font-black ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                      {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
+                                   </p>
+                                   <button
+                                     type="button"
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       setEditingTransaction(t);
+                                     }}
+                                     className="p-1.5 bg-white/5 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 rounded-lg transition-all"
+                                     title="Editar lançamento"
+                                   >
+                                     <Pencil size={14} />
+                                   </button>
+                                 </div>
                               </div>
                             ))}
                          </div>
@@ -512,6 +531,13 @@ export function MonthlyHistory() {
       <div className="pt-8 pb-12 opacity-30 text-center">
         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Fim dos Lançamentos</p>
       </div>
+
+      <EditTransactionModal
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        transaction={editingTransaction}
+        onSuccess={loadData}
+      />
     </div>
   );
 }

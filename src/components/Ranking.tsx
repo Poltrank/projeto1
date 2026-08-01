@@ -169,7 +169,7 @@ export function Ranking() {
                   </button>
                   <button
                     onClick={async () => {
-                      if (confirm(`EXCLUIR PERFIL de ${entry.nickname}? (Tudo será apagado e o usuário precisará se cadastrar de novo)`)) {
+                      if (confirm(`EXCLUIR PERFIL de ${entry.nickname}?\n\nO perfil no sistema será apagado. Para o motorista recadastrar, basta acessar com a SENHA ORIGINAL (em Fazer Login ou Criar Conta). Caso tenha esquecido a senha, oriente a cadastrar colocando 0 na frente do DDD (ex: 047...).`)) {
                         try {
                           await deleteUser(entry.userId);
                         } catch (e: any) {
