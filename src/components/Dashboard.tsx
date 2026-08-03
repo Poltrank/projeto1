@@ -1,4 +1,4 @@
-import { formatCurrency } from "../lib/utils";
+import { formatCurrency, get30DayDailyCost, is30DayCostActive } from "../lib/utils";
 import { UserProfile } from "../types";
 import { motion } from "motion/react";
 import { Calendar, Target } from "lucide-react";
@@ -19,11 +19,11 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
   const insuranceDaily = (profile.monthlyInsurance || 0) / daysInCurrentMonth;
   const vehicleDaily = (profile.monthlyVehicleCost || 0) / daysInCurrentMonth;
   const internetDaily = (profile.monthlyInternet || 0) / daysInCurrentMonth;
-  const tiresDaily = (profile.monthlyTires || 0) / daysInCurrentMonth;
-  const currentMonthKey = format(now, 'yyyy-MM');
-  const maintenanceDaily = (profile.maintenanceMonth === currentMonthKey ? (profile.monthlyMaintenance || 0) : 0) / daysInCurrentMonth;
+  const tiresDaily = get30DayDailyCost(profile.monthlyTires, profile.tiresDate, profile.updatedAt, profile.tiresInstallments || 1);
+  const maintenanceDaily = get30DayDailyCost(profile.monthlyMaintenance, profile.maintenanceDate, profile.updatedAt, 1);
+  const oilChangeDaily = get30DayDailyCost(profile.monthlyOilChange, profile.oilChangeDate, profile.updatedAt, profile.oilChangeInstallments || 1);
   const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / daysInCurrentMonth : 0;
-  const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily + ipvaDaily + licensingDaily;
+  const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + oilChangeDaily + electricityDaily + ipvaDaily + licensingDaily;
 
   const targetDailyNet = profile.targetMonthlyNet && profile.targetDaysPerMonth ? (profile.targetMonthlyNet / profile.targetDaysPerMonth) : 0;
   const targetDailyGross = targetDailyNet > 0 ? targetDailyNet + dailyFixedCost : 0;
@@ -193,8 +193,9 @@ export function Dashboard({ profile }: { profile: UserProfile }) {
                 profile.monthlyInsurance ? 'Seguro' : null,
                 profile.monthlyVehicleCost ? 'Veículo' : null,
                 profile.monthlyInternet ? 'Internet' : null,
-                profile.monthlyTires ? 'Pneus' : null,
-                (profile.maintenanceMonth === currentMonthKey && profile.monthlyMaintenance) ? 'Revisão' : null,
+                is30DayCostActive(profile.monthlyTires, profile.tiresDate, profile.updatedAt, profile.tiresInstallments || 1) ? 'Pneus' : null,
+                is30DayCostActive(profile.monthlyMaintenance, profile.maintenanceDate, profile.updatedAt, 1) ? 'Revisão do Carro' : null,
+                is30DayCostActive(profile.monthlyOilChange, profile.oilChangeDate, profile.updatedAt, profile.oilChangeInstallments || 1) ? 'Óleo' : null,
                 profile.carType === 'Elétrico' && profile.lastElectricityBill ? 'Luz' : null,
                 (profile.ipvaYear === currentYearStr && profile.annualIpva) ? 'IPVA' : null,
                 (profile.licensingYear === currentYearStr && profile.annualLicensing) ? 'Licenc.' : null

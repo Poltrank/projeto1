@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { collection, query, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
-import { formatCurrency } from "../lib/utils";
+import { formatCurrency, get30DayDailyCost } from "../lib/utils";
 import { 
   format, 
   parseISO, 
@@ -83,10 +83,11 @@ export function MonthlyHistory() {
           const insuranceDaily = (profile.monthlyInsurance || 0) / daysInThisMonth;
           const vehicleDaily = (profile.monthlyVehicleCost || 0) / daysInThisMonth;
           const internetDaily = (profile.monthlyInternet || 0) / daysInThisMonth;
-          const tiresDaily = (profile.monthlyTires || 0) / daysInThisMonth;
-          const maintenanceDaily = (profile.monthlyMaintenance || 0) / daysInThisMonth;
+          const tiresDaily = get30DayDailyCost(profile.monthlyTires, profile.tiresDate, profile.updatedAt, profile.tiresInstallments || 1);
+          const maintenanceDaily = get30DayDailyCost(profile.monthlyMaintenance, profile.maintenanceDate, profile.updatedAt, 1);
+          const oilChangeDaily = get30DayDailyCost(profile.monthlyOilChange, profile.oilChangeDate, profile.updatedAt, profile.oilChangeInstallments || 1);
           const electricityDaily = profile.carType === 'Elétrico' ? (profile.lastElectricityBill || 0) / daysInThisMonth : 0;
-          const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + electricityDaily;
+          const dailyFixedCost = insuranceDaily + vehicleDaily + internetDaily + tiresDaily + maintenanceDaily + oilChangeDaily + electricityDaily;
 
           // Calculate Fixed Cost for this month
           // Only count from the later of (start of month) or (registration date)

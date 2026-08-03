@@ -15,7 +15,11 @@ const profileSchema = z.object({
   monthlyVehicleCost: z.number().min(0).optional(),
   monthlyInternet: z.number().min(0).optional(),
   monthlyTires: z.number().min(0).optional(),
+  tiresInstallments: z.number().min(1).max(12).optional(),
   monthlyMaintenance: z.number().min(0).optional(),
+  maintenanceInstallments: z.number().min(1).max(12).optional(),
+  monthlyOilChange: z.number().min(0).optional(),
+  oilChangeInstallments: z.number().min(1).max(12).optional(),
   annualIpva: z.number().min(0).optional(),
   annualLicensing: z.number().min(0).optional(),
   lastElectricityBill: z.number().min(0).optional(),
@@ -47,7 +51,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       monthlyVehicleCost: profile?.monthlyVehicleCost || 0,
       monthlyInternet: profile?.monthlyInternet || 0,
       monthlyTires: profile?.monthlyTires || 0,
+      tiresInstallments: profile?.tiresInstallments || 1,
       monthlyMaintenance: profile?.monthlyMaintenance || 0,
+      maintenanceInstallments: profile?.maintenanceInstallments || 1,
+      monthlyOilChange: profile?.monthlyOilChange || 0,
+      oilChangeInstallments: profile?.oilChangeInstallments || 1,
       annualIpva: profile?.annualIpva || 0,
       annualLicensing: profile?.annualLicensing || 0,
       lastElectricityBill: profile?.lastElectricityBill || 0,
@@ -59,13 +67,23 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const onSubmit = async (data: ProfileValues) => {
     try {
-      const currentMonthKey = new Date().toISOString().substring(0, 7);
+      const nowIso = new Date().toISOString();
+      const currentMonthKey = nowIso.substring(0, 7);
       const currentYear = new Date().getFullYear().toString();
       await updateProfile({
         ...profile,
         ...data,
+        tiresDate: (data.monthlyTires && data.monthlyTires > 0)
+          ? (profile?.monthlyTires === data.monthlyTires ? profile?.tiresDate || nowIso : nowIso)
+          : "",
+        maintenanceDate: (data.monthlyMaintenance && data.monthlyMaintenance > 0)
+          ? (profile?.monthlyMaintenance === data.monthlyMaintenance ? profile?.maintenanceDate || nowIso : nowIso)
+          : "",
         maintenanceMonth: (data.monthlyMaintenance && data.monthlyMaintenance > 0) 
           ? (profile?.monthlyMaintenance === data.monthlyMaintenance ? profile?.maintenanceMonth : currentMonthKey) 
+          : "",
+        oilChangeDate: (data.monthlyOilChange && data.monthlyOilChange > 0)
+          ? (profile?.monthlyOilChange === data.monthlyOilChange ? profile?.oilChangeDate || nowIso : nowIso)
           : "",
         ipvaYear: (data.annualIpva && data.annualIpva > 0)
           ? (profile?.annualIpva === data.annualIpva ? profile?.ipvaYear : currentYear)
@@ -73,7 +91,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         licensingYear: (data.annualLicensing && data.annualLicensing > 0)
           ? (profile?.annualLicensing === data.annualLicensing ? profile?.licensingYear : currentYear)
           : "",
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowIso,
       });
       onClose();
     } catch (error: any) {
@@ -163,30 +181,86 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase text-blue-400 mb-2 tracking-widest pl-1">Troca de Pneu (R$)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 font-bold text-xs uppercase">R$</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register("monthlyTires", { valueAsNumber: true })}
-                  className="w-full bg-slate-800 border-blue-900/30 border pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  placeholder="Custos mensais"
-                />
+              <label className="block text-[10px] font-black uppercase text-blue-400 mb-2 tracking-widest pl-1">
+                Troca de Pneu (R$) &amp; Parcelas (1x a 12x)
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="relative col-span-2">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 font-bold text-xs uppercase">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    {...register("monthlyTires", { valueAsNumber: true })}
+                    className="w-full bg-slate-800 border-blue-900/30 border pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    placeholder="Valor total"
+                  />
+                </div>
+                <select
+                  {...register("tiresInstallments", { valueAsNumber: true })}
+                  className="bg-slate-800 border border-blue-900/30 rounded-xl px-2 text-sm font-bold text-blue-400 outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1}x ({ (i + 1) * 30 }d)
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase text-amber-500 mb-2 tracking-widest pl-1">Revisão (R$)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 font-bold text-xs uppercase">R$</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register("monthlyMaintenance", { valueAsNumber: true })}
-                  className="w-full bg-slate-800 border-amber-900/30 border pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-amber-500 transition-all"
-                  placeholder="Custos mensais"
-                />
+              <label className="block text-[10px] font-black uppercase text-amber-500 mb-2 tracking-widest pl-1">
+                Revisão do Carro (R$) &amp; Parcelas (1x a 12x)
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="relative col-span-2">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 font-bold text-xs uppercase">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    {...register("monthlyMaintenance", { valueAsNumber: true })}
+                    className="w-full bg-slate-800 border-amber-900/30 border pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                    placeholder="Valor total"
+                  />
+                </div>
+                <select
+                  {...register("maintenanceInstallments", { valueAsNumber: true })}
+                  className="bg-slate-800 border border-amber-900/30 rounded-xl px-2 text-sm font-bold text-amber-400 outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1}x ({ (i + 1) * 30 }d)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase text-amber-400 mb-2 tracking-widest pl-1">
+                Troca de Óleo (R$) &amp; Parcelas (1x a 12x)
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="relative col-span-2">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 font-bold text-xs uppercase">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    {...register("monthlyOilChange", { valueAsNumber: true })}
+                    className="w-full bg-slate-800 border-amber-900/30 border pl-12 p-3.5 rounded-xl text-lg font-bold text-white outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                    placeholder="Valor total"
+                  />
+                </div>
+                <select
+                  {...register("oilChangeInstallments", { valueAsNumber: true })}
+                  className="bg-slate-800 border border-amber-900/30 rounded-xl px-2 text-sm font-bold text-amber-400 outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1}x ({ (i + 1) * 30 }d)
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

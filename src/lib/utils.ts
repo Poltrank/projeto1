@@ -13,22 +13,26 @@ export function formatCurrency(value: number) {
   }).format(value);
 }
 
-export function get30DayDailyCost(amount?: number, dateStr?: string, updatedAt?: any): number {
+export function get30DayDailyCost(amount?: number, dateStr?: string, updatedAt?: any, installments: number = 1): number {
   if (!amount || amount <= 0) return 0;
+  const numInstallments = Math.max(1, Math.min(12, installments || 1));
+  const totalDays = numInstallments * 30;
   const now = new Date();
   const baseDate = dateStr ? new Date(dateStr) : (updatedAt ? new Date(updatedAt) : now);
-  if (isNaN(baseDate.getTime())) return amount / 30;
+  if (isNaN(baseDate.getTime())) return amount / totalDays;
   const daysDiff = differenceInDays(now, baseDate);
-  if (daysDiff > 30) return 0;
-  return amount / 30;
+  if (daysDiff > totalDays) return 0;
+  return amount / totalDays;
 }
 
-export function is30DayCostActive(amount?: number, dateStr?: string, updatedAt?: any): boolean {
+export function is30DayCostActive(amount?: number, dateStr?: string, updatedAt?: any, installments: number = 1): boolean {
   if (!amount || amount <= 0) return false;
+  const numInstallments = Math.max(1, Math.min(12, installments || 1));
+  const totalDays = numInstallments * 30;
   const now = new Date();
   const baseDate = dateStr ? new Date(dateStr) : (updatedAt ? new Date(updatedAt) : now);
   if (isNaN(baseDate.getTime())) return true;
   const daysDiff = differenceInDays(now, baseDate);
-  return daysDiff <= 30;
+  return daysDiff <= totalDays;
 }
 
